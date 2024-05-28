@@ -1,0 +1,30 @@
+module.exports = {
+    parserOptions: {
+        ecmaVersion: 2020,
+        sourceType: 'module',
+        project: './tsconfig.json',
+        ecmaFeatures: {
+            jsx: true,
+        },
+    },
+    extends: ['airbnb', 'airbnb-typescript', 'plugin:@typescript-eslint/recommended', 'prettier'],
+    plugins: ['@typescript-eslint', 'prettier'],
+    rules: {
+        'import/no-cycle': 0,
+        'no-console': 'off',
+        'prettier/prettier': 0,
+        '@typescript-eslint/no-var-requires': 0,
+        '@typescript-eslint/dot-notation': 0,
+        '@typescript-eslint/ban-ts-comment': 0,
+        'import/no-extraneous-dependencies': 'off',
+        '@typescript-eslint/no-unused-vars': 0,
+        'no-use-before-define': 0,
+        '@typescript-eslint/no-use-before-define': 0,
+        'prefer-rest-params': 0,
+        'no-underscore-dangle': ['error', { allowAfterThis: true }],
+        '@typescript-eslint/no-loop-func': 0,
+        'no-underscore-dangle': 0,
+        'class-methods-use-this': 0,
+        'prefer-destructuring': 0,
+    },
+};

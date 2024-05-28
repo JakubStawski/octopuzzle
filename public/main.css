@@ -1,0 +1,66 @@
+@keyframes moveAround {
+    0% {
+        transform: translateX(-70px);
+    }
+
+    50% {
+        transform: translateX(70px);
+    }
+
+    100% {
+        transform: translateX(-70px);
+    }
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    /* background-image: url('./images/bg-image.png'); */
+    background-position-x: center;
+    background-position-y: bottom;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+canvas {
+    display: block;
+    aspect-ratio: 16 / 9;
+    box-sizing: border-box;
+    width: 100%;
+    max-height: 100vh;
+    background: transparent;
+    position: relative;
+}
+
+.parallaxBackground {
+    transform: translateX(-70px);
+    position: absolute;
+    object-fit: cover;
+    width: calc(100% + 140px);
+    height: 100%;
+}
+
+.parallaxBackground1 {
+    animation: infinite moveAround 60s;
+}
+
+.parallaxBackground2 {
+    animation: infinite moveAround 58s;
+}
+
+.parallaxBackground3 {
+    animation: infinite moveAround 56s;
+}
+
+.parallaxBackground4 {
+    animation: infinite moveAround 54s;
+}
+
+.parallaxBackground5 {
+    animation: infinite moveAround 52;
+}

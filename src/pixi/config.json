@@ -1,0 +1,16 @@
+{
+    "colors": {
+        "0": "pink",
+        "1": "white",
+        "2": "green",
+        "3": "yellow"
+    },
+    "config": {
+        "mainStagePadding": 10,
+        "playerPanelHeight": 50,
+        "octiWidth": 200,
+        "octiHeight": 200,
+        "octiPartPositionOnBoard": 100,
+        "gameBoardGap": 15
+    }
+}

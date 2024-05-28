@@ -1,0 +1,12 @@
+.idea
+.git
+.docker
+.env
+.gitignore
+.gitlab-ci.yml
+.dockerignore
+localhost.crt
+localhost.key
+Dockerfile
+docker-compose.yml
+/node_modules/
