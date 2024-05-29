@@ -28,10 +28,7 @@ export default class Loader {
             frame: './images/frame3.png',
             star: './images/star.png',
             timer: './images/timer.png',
-        });
-
-        PIXI.Assets.load({
-            src: `./fonts/Alien-Encounters-Regular.ttf`,
+            logo: './images/logo_small.png',
         });
 
         PIXI.Assets.load({

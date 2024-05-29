@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js';
+import { DropShadowFilter } from 'pixi-filters';
 import GameBoard from './containers/GameBoard';
 
 import config from './config.json';
@@ -51,14 +52,24 @@ export default class Stage {
     private _timer: PIXI.Container;
 
     /**
+     * Logo component
+     */
+    private _logo: PIXI.Sprite;
+
+    /**
+     * Game and all game components container
+     */
+    private _gameContainer: PIXI.Container;
+
+    /**
      * Constructor of the pixi application and its stage
      */
     constructor() {
         this._app = new PIXI.Application({
             resizeTo: document.querySelector('canvas'),
-            resolution: 1,
-            width: 1080,
-            height: 1080,
+            resolution: 2,
+            width: 1800,
+            height: 1800,
             backgroundAlpha: 0,
         });
 
@@ -80,20 +91,40 @@ export default class Stage {
      * Resize function
      */
     private _resize() {
-        this._app.stage.width = this._app.screen.width - config.config.mainStagePadding;
-        this._app.stage.height = this._app.screen.height - config.config.mainStagePadding;
+        // this._app.stage.width = this._app.screen.width - config.config.mainStagePadding;
+        // this._app.stage.height = this._app.screen.height - config.config.mainStagePadding;
     }
 
     /**
      * Init the game
      */
     private _init() {
+        this._gameContainer = new PIXI.Container();
+        this._gameContainer.name = 'Game_MainContainer';
+        this._app.stage.addChild(this._gameContainer);
+
+        this._gameContainer.width = this._app.screen.width - config.config.mainStagePadding;
+        this._gameContainer.height = this._app.screen.height - config.config.mainStagePadding;
+
+        this._gameContainer.y += 20;
+
         this._createGameBoard();
         // this._createPlayerPanel();
         this._resize();
         this._createLives();
         this._createScore();
         this._createTimer();
+
+        this._createLogo();
+    }
+
+    private _createLogo() {
+        this._logo = new PIXI.Sprite(PIXI.Assets.cache.get('logo'));
+        this._logo.anchor.set(0.5, 0.5);
+        this._logo.name = 'Game_Logo';
+
+        this._logo.y = -config.config.frameHeight * 1.5 - config.config.gameBoardGap * 2 - 20;
+        this._gameContainer.addChild(this._logo);
     }
 
     /**
@@ -103,7 +134,7 @@ export default class Stage {
         this._gameBoard = new GameBoard();
         this._gameBoard.y = config.config.playerPanelHeight - config.config.gameBoardGap;
 
-        this._app.stage.addChild(this._gameBoard);
+        this._gameContainer.addChild(this._gameBoard);
     }
 
     /**
@@ -115,7 +146,7 @@ export default class Stage {
         this._livesBoard.x = config.config.frameWidth / 2 + config.config.healthIconWidth;
         this._livesBoard.y = -config.config.frameHeight * 1.5 + this._livesBoard.height;
 
-        this._app.stage.addChild(this._livesBoard);
+        this._gameContainer.addChild(this._livesBoard);
     }
 
     /**
@@ -131,7 +162,7 @@ export default class Stage {
             this._livesBoard.height +
             config.config.playerStatusGap;
 
-        this._app.stage.addChild(this._scoreBoard);
+        this._gameContainer.addChild(this._scoreBoard);
     }
 
     /**
@@ -142,7 +173,7 @@ export default class Stage {
         this._timer.x = 0;
         this._timer.y = 0;
 
-        this._app.stage.addChild(this._timer);
+        this._gameContainer.addChild(this._timer);
     }
 
     /**
@@ -156,7 +187,7 @@ export default class Stage {
         this._playerPanel.name = 'PlayerPanel';
         this._playerPanel.x = 0;
 
-        this._app.stage.addChild(this._playerPanel);
+        this._gameContainer.addChild(this._playerPanel);
     }
 
     set resources(resources) {

@@ -116,6 +116,12 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
                 EXIT: 'high_scores',
             },
         },
+        // game_over: {
+        //     entry: gameEngine.gameOverHandler,
+        //     on: {
+        //         CONTINUE: 'high_score',
+        //     },
+        // },
         high_scores: {
             entry: gameEngine.showHighScores,
             on: {
