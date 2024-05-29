@@ -60,13 +60,14 @@ export default class BoardSquare extends PIXI.Container {
         this._rectangle.name = `${this.name}_Graphics;`;
         this._rectangle.visible = true;
 
-        this._rectangle.beginFill(this._background, 0.75);
+        this._rectangle.beginFill(this._background, 0.65);
 
-        this._rectangle.drawRect(
-            -config.config.octiWidth,
-            -config.config.octiHeight,
-            config.config.octiWidth * 2,
-            config.config.octiHeight * 2,
+        this._rectangle.drawRoundedRect(
+            -this._frame.width / 2,
+            -this._frame.width / 2,
+            this._frame.width - 5,
+            this._frame.height - 5,
+            130,
         );
     }
 
@@ -75,6 +76,9 @@ export default class BoardSquare extends PIXI.Container {
      */
     private _createFrame() {
         this._frame = new PIXI.Sprite(PIXI.Assets.cache.get('frame'));
+        this._frame.width = config.config.frameWidth;
+        this._frame.height = config.config.frameHeight;
+
         this._frame.anchor.set(0.5);
     }
 }

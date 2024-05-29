@@ -16,20 +16,26 @@ export default class Loader {
             'yellow-lb': './images/octi-yellow-lb.png',
             'yellow-rt': './images/octi-yellow-rt.png',
             'yellow-rb': './images/octi-yellow-rb.png',
-            'white-lt': './images/octi-white-lt.png',
-            'white-lb': './images/octi-white-lb.png',
-            'white-rt': './images/octi-white-rt.png',
-            'white-rb': './images/octi-white-rb.png',
+            'blue-lt': './images/octi-blue-lt.png',
+            'blue-lb': './images/octi-blue-lb.png',
+            'blue-rt': './images/octi-blue-rt.png',
+            'blue-rb': './images/octi-blue-rb.png',
             'pink-lt': './images/octi-pink-lt.png',
             'pink-lb': './images/octi-pink-lb.png',
             'pink-rt': './images/octi-pink-rt.png',
             'pink-rb': './images/octi-pink-rb.png',
-            'heart-icon': './images/heart-icon.png',
-            frame: './images/frame2.png',
+            health: './images/health.png',
+            frame: './images/frame3.png',
+            star: './images/star.png',
+            timer: './images/timer.png',
         });
 
         PIXI.Assets.load({
             src: `./fonts/Alien-Encounters-Regular.ttf`,
+        });
+
+        PIXI.Assets.load({
+            src: `./fonts/Playground.ttf`,
         });
 
         PIXI.Assets.loadBundle('octis', this._handleOnProgress.bind(this)).then(() => {

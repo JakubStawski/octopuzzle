@@ -2,6 +2,8 @@ import * as PIXI from 'pixi.js';
 import { gsap } from 'gsap';
 import { gameService } from '../../state/stateMachine';
 
+import config from '../config.json';
+
 /**
  * Timer components that shows the player how many time one has left
  */
@@ -17,22 +19,15 @@ export default class Timer extends PIXI.Container {
     private _timerProgressBar: PIXI.Graphics;
 
     /**
-     * width of the rectangle
+     * Pixi sprite for timer
      */
-    private _w: number;
-
-    /**
-     * height of the rectangle
-     */
-    private _h: number;
+    private _timerSprite: PIXI.Sprite;
 
     /**
      * Constructor of a component
      */
-    constructor(width: number, height: number) {
+    constructor() {
         super();
-        this._w = width;
-        this._h = height;
 
         this._init();
     }
@@ -41,10 +36,32 @@ export default class Timer extends PIXI.Container {
      * Init component
      */
     private _init() {
+        this._createTimerSprite();
         this._createTimerContainer();
         this._createProgressbar();
 
+        this.addChild(this._timerContainer);
+        this.addChild(this._timerSprite);
+
         this._onTimeChange();
+    }
+
+    private _createTimerSprite() {
+        this._timerSprite = new PIXI.Sprite(PIXI.Assets.cache.get('timer'));
+        this._timerSprite.width = config.config.timerWidth;
+        this._timerSprite.height = config.config.timerHeight;
+
+        // this._timerSprite.blendMode = PIXI.BLEND_MODES.LIGHTEN;
+
+        this._timerSprite.anchor.set(0.5, 0.5);
+        this._timerSprite.y =
+            -config.config.frameHeight * 1.5 +
+            this._timerSprite.height +
+            config.config.healthIconHeight +
+            config.config.scoreIconHeight +
+            2 * config.config.playerStatusGap;
+
+        this._timerSprite.x = config.config.frameWidth + config.config.gameBoardGap;
     }
 
     /**
@@ -52,13 +69,20 @@ export default class Timer extends PIXI.Container {
      */
     private _createTimerContainer() {
         this._timerContainer = new PIXI.Graphics();
-        this._timerContainer.pivot.set(0.5);
-        this._timerContainer.beginFill(0x23061a);
-        this._timerContainer.drawRect(0, 0, this._w, this._h);
-        this._timerContainer.y = -this._h;
+        this._timerContainer.beginFill(0xffffff);
+        this._timerContainer.drawRect(0, 0, config.config.timerWidth - 90, config.config.timerHeight - 30);
+        this._timerContainer.y =
+            -config.config.frameHeight * 1.5 +
+            this._timerSprite.height +
+            config.config.healthIconHeight +
+            config.config.scoreIconHeight +
+            2 * config.config.playerStatusGap -
+            this._timerContainer.height / 2;
+
+        this._timerContainer.x =
+            config.config.frameWidth + config.config.gameBoardGap - this._timerContainer.width / 2 + 30;
 
         // this._createShadow();
-        this.addChild(this._timerContainer);
     }
 
     /**
@@ -66,10 +90,8 @@ export default class Timer extends PIXI.Container {
      */
     private _createProgressbar() {
         this._timerProgressBar = new PIXI.Graphics();
-        this._timerProgressBar.beginFill('0xfc2eb6');
-        this._timerProgressBar.drawRect(0, 0, this._timerContainer.width, this._timerContainer.height);
-        this._timerProgressBar.pivot.x = 0.5;
-        this._timerProgressBar.pivot.y = 0.5;
+        this._timerProgressBar.beginFill('0x76d000');
+        this._timerProgressBar.drawRect(0, 0, this._timerContainer.width - 120, this._timerContainer.height);
 
         this._timerProgressBar.x = 0;
         this._timerProgressBar.y = 0;

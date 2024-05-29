@@ -1,16 +1,25 @@
 {
     "colors": {
         "0": "pink",
-        "1": "white",
+        "1": "blue",
         "2": "green",
         "3": "yellow"
     },
     "config": {
-        "mainStagePadding": 10,
+        "mainStagePadding": 20,
         "playerPanelHeight": 50,
         "octiWidth": 200,
         "octiHeight": 200,
         "octiPartPositionOnBoard": 100,
-        "gameBoardGap": 15
+        "gameBoardGap": 25,
+        "frameHeight": 500,
+        "frameWidth": 500,
+        "healthIconWidth": 70,
+        "healthIconHeight": 70,
+        "scoreIconWidth": 70,
+        "scoreIconHeight": 70,
+        "playerStatusGap": 40,
+        "timerWidth": 475,
+        "timerHeight": 71
     }
 }

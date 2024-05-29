@@ -5,6 +5,9 @@ import config from './config.json';
 
 import Loader from './Loader';
 import PlayerPanel from './containers/PlayerPanel';
+import Lives from './components/Lives';
+import Score from './components/Score';
+import Timer from './components/Timer';
 
 export interface IOctisGame extends PIXI.Application {
     resources: object;
@@ -33,18 +36,33 @@ export default class Stage {
     private _resources: unknown;
 
     /**
+     * Score component
+     */
+    private _livesBoard: PIXI.Container;
+
+    /**
+     * Score component
+     */
+    private _scoreBoard: PIXI.Container;
+
+    /**
+     * Timer component
+     */
+    private _timer: PIXI.Container;
+
+    /**
      * Constructor of the pixi application and its stage
      */
     constructor() {
         this._app = new PIXI.Application({
             resizeTo: document.querySelector('canvas'),
             resolution: 1,
-            width: 2560,
-            height: 1440,
+            width: 1080,
+            height: 1080,
             backgroundAlpha: 0,
         });
 
-        this._resources = new Loader(this);
+        this._resources = new Loader();
 
         globalThis.__PIXI_APP__ = this._app;
         if (!document.querySelector('canvas')) {
@@ -71,8 +89,11 @@ export default class Stage {
      */
     private _init() {
         this._createGameBoard();
-        this._createPlayerPanel();
+        // this._createPlayerPanel();
         this._resize();
+        this._createLives();
+        this._createScore();
+        this._createTimer();
     }
 
     /**
@@ -83,6 +104,45 @@ export default class Stage {
         this._gameBoard.y = config.config.playerPanelHeight - config.config.gameBoardGap;
 
         this._app.stage.addChild(this._gameBoard);
+    }
+
+    /**
+     * Create lives display
+     */
+    private _createLives() {
+        this._livesBoard = new Lives();
+
+        this._livesBoard.x = config.config.frameWidth / 2 + config.config.healthIconWidth;
+        this._livesBoard.y = -config.config.frameHeight * 1.5 + this._livesBoard.height;
+
+        this._app.stage.addChild(this._livesBoard);
+    }
+
+    /**
+     * creates score display
+     */
+    private _createScore() {
+        this._scoreBoard = new Score();
+
+        this._scoreBoard.x = config.config.frameWidth / 2 + config.config.healthIconWidth;
+        this._scoreBoard.y =
+            -config.config.frameHeight * 1.5 +
+            this._scoreBoard.height +
+            this._livesBoard.height +
+            config.config.playerStatusGap;
+
+        this._app.stage.addChild(this._scoreBoard);
+    }
+
+    /**
+     * Create timer that represents how much time player has left for decision
+     */
+    private _createTimer() {
+        this._timer = new Timer();
+        this._timer.x = 0;
+        this._timer.y = 0;
+
+        this._app.stage.addChild(this._timer);
     }
 
     /**

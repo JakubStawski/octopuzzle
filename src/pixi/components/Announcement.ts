@@ -34,7 +34,7 @@ export default class Announcement extends PIXI.Container {
      */
     private _createAnnouncementText() {
         const textStyle = new PIXI.TextStyle({
-            fontFamily: 'Alien Encounters Regular',
+            fontFamily: 'Playground',
             lineJoin: 'round',
             fontSize: 24,
             fill: '0xffffff',

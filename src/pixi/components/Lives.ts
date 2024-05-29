@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { gsap } from 'gsap';
 import { gameService } from '../../state/stateMachine';
+import config from '../config.json';
 
 /**
  * Component that displays players lives
@@ -28,18 +29,17 @@ export default class Lives extends PIXI.Container {
      */
     private _createLivesIcons() {
         this._livesIconsContainer = new PIXI.Container();
-        
 
         for (let i = 0; i < gameService.initialState.context.player.lives; i += 1) {
-            const heartIcon = new PIXI.Sprite(PIXI.Assets.cache.get('heart-icon'));
-            heartIcon.width = 40;
-            heartIcon.height = 40;
+            const healthIcon = new PIXI.Sprite(PIXI.Assets.cache.get('health'));
+            healthIcon.width = config.config.healthIconWidth;
+            healthIcon.height = config.config.healthIconHeight;
 
-            heartIcon.anchor.set(0.5, 0.5);
-            heartIcon.y = 0;
+            healthIcon.anchor.set(0.5, 0.5);
+            healthIcon.y = 0;
 
-            heartIcon.x = i * (heartIcon.width + 5);
-            this._livesIconsContainer.addChild(heartIcon);
+            healthIcon.x = i * (healthIcon.width + 5);
+            this._livesIconsContainer.addChild(healthIcon);
         }
 
         this.addChild(this._livesIconsContainer);
@@ -59,7 +59,7 @@ export default class Lives extends PIXI.Container {
                         },
                         duration: 0.2,
                         delay: 1,
-                        ease: 'slow'
+                        ease: 'slow',
                     });
                 }
             }

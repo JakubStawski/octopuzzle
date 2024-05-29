@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js';
-import gsap from 'gsap';
 import { gameService } from '../../state/stateMachine';
+
+import config from '../config.json';
 
 /**
  * Component that displays players score
@@ -14,7 +15,7 @@ export default class Score extends PIXI.Container {
     /**
      * PIXI text component which is set to show score title
      */
-    private _scoreTitle: PIXI.Text;
+    private _scoreIcon: PIXI.Sprite;
 
     /**
      * Constructor of the component
@@ -29,39 +30,44 @@ export default class Score extends PIXI.Container {
      * Init component
      */
     private _init() {
+        this._createScoreIcon();
         this._createScoreText();
 
         this._onScoreChange();
     }
 
     /**
-     * Create both the title and actual score number based on initial context of the state
+     * Create score number based on initial context of the state
      */
     private _createScoreText() {
         const textStyle = new PIXI.TextStyle({
-            fontFamily: 'Alien Encounters Regular',
+            fontFamily: 'Playground',
             lineJoin: 'round',
-            fontSize: 40,
+            fontSize: 66,
             fill: '0xffffff',
         });
 
-        const textStyleSmall = new PIXI.TextStyle({
-            fontFamily: 'Alien Encounters Regular',
-            lineJoin: 'round',
-            fontSize: 20,
-            fill: '0xffffff',
-        });
-
-        this._scoreTitle = new PIXI.Text('Score:', textStyleSmall);
         this._scoreText = new PIXI.Text('0', textStyle);
-
-        this._scoreTitle.anchor.set(0, 0.5);
         this._scoreText.anchor.set(0, 0.5);
 
-        this._scoreText.x = this._scoreTitle.width + 20;
+        this._scoreText.x = this._scoreIcon.width;
 
         this.addChild(this._scoreText);
-        this.addChild(this._scoreTitle);
+    }
+
+    /**
+     * Creates score star icon
+     */
+    private _createScoreIcon() {
+        this._scoreIcon = new PIXI.Sprite(PIXI.Assets.cache.get('star'));
+        this._scoreIcon.width = config.config.scoreIconWidth;
+        this._scoreIcon.height = config.config.scoreIconHeight;
+
+        this._scoreIcon.anchor.set(0.5, 0.5);
+        this._scoreIcon.y = 0;
+
+        this._scoreIcon.x = 0;
+        this.addChild(this._scoreIcon);
     }
 
     /**
@@ -72,7 +78,6 @@ export default class Score extends PIXI.Container {
         gameService.subscribe((state) => {
             if (state.event.type === 'COMPLETED' || state.event.type === 'CONTINUE') {
                 this._scoreText.text = state.context.player.score;
-
             }
         });
     }

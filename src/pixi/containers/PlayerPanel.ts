@@ -1,7 +1,6 @@
 import * as PIXI from 'pixi.js';
 
-import Score from "../components/Score";
-import Lives from '../components/Lives';
+import Score from '../components/Score';
 import Timer from '../components/Timer';
 import Announcement from '../components/Announcement';
 
@@ -28,16 +27,6 @@ export default class PlayerPanel extends PIXI.Container {
      * Rectangle
      */
     private _rectangle: PIXI.Graphics;
-
-    /**
-     * Score component
-     */
-    private _scoreBoard: PIXI.Container;
-
-    /**
-     * Score component
-     */
-    private _livesBoard: PIXI.Container;
 
     /**
      * Timer component
@@ -70,8 +59,8 @@ export default class PlayerPanel extends PIXI.Container {
      */
     private _init() {
         this._createRectangle();
-        this._createLives();
-        this._createScore();
+        // this._createLives();
+        // this._createScore();
         this._createTimer();
         this._createAnnouncement();
     }
@@ -79,7 +68,6 @@ export default class PlayerPanel extends PIXI.Container {
     private _createAnnouncement() {
         this._announcement = new Announcement();
         this._announcement.x = 0;
-        
 
         this.addChild(this._announcement);
     }
@@ -119,25 +107,11 @@ export default class PlayerPanel extends PIXI.Container {
     }
 
     /**
-     * Create lives display
-     */
-    private _createLives() {
-        this._livesBoard = new Lives();
-
-        this._livesBoard.x = this._w / 2 - this._livesBoard.width;
-        this._livesBoard.y = 0;
-
-
-        this.addChild(this._livesBoard);
-    }
-
-    /**
      * creates score display
      */
     private _createScore() {
         this._scoreBoard = new Score();
         this._scoreBoard.x = -this._w / 2 + this._scoreBoard.width / 4;
-
 
         this.addChild(this._scoreBoard);
     }
