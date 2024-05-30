@@ -30,6 +30,7 @@ export default class Loader {
             timer: './images/timer.png',
             logo: './images/logo_small.png',
             sadOcti: './images/sad-octi.png',
+            highscores: './images/highscores-bg.png',
         });
 
         PIXI.Assets.load({

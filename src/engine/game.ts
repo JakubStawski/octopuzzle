@@ -1,3 +1,4 @@
+import { IHighscoresBoard } from 'src/pixi/types';
 import { gameService } from '../state/stateMachine';
 import { findMostFrequentItem, randomizePieceColor, randomizeUniquePiecePart, Timer } from './utils';
 
@@ -168,13 +169,48 @@ export const loseHp = (context) => {
 };
 
 /**
- * Showing highscores in console
+ * Showing highscores
  * @param context state of the game
  */
 export const showHighScores = (context) => {
     console.table({
         'Your score': context.player.score,
     });
+};
+
+/**
+ * Adding score to the highscores
+ * @param context state of the game
+ */
+export const addScoreToHighScores = (context) => {
+    const curretHighscores = localStorage.getItem('highScoreBoard') || '[]';
+
+    const highScoreBoard = JSON.parse(curretHighscores);
+    highScoreBoard.push({
+        date: new Date().toLocaleString('pl-PL'),
+        score: context.player.score,
+    });
+
+    const compareFn = (a: IHighscoresBoard, b: IHighscoresBoard) => {
+        if (a.score > b.score) {
+            return -1;
+        }
+
+        if (a.score > b.score) {
+            return 1;
+        }
+
+        return 0;
+    };
+    highScoreBoard.sort(compareFn);
+
+    if (highScoreBoard.length > 3) {
+        highScoreBoard.pop();
+    }
+
+    console.log('no 1');
+
+    localStorage.setItem('highScoreBoard', JSON.stringify(highScoreBoard));
 };
 
 /**

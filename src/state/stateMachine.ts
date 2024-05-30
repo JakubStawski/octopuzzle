@@ -117,6 +117,7 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
             },
         },
         game_over: {
+            entry: [gameEngine.addScoreToHighScores],
             on: {
                 CONTINUE: 'high_scores',
             },

@@ -1,5 +1,7 @@
 /* eslint-disable no-plusplus */
 
+import { gameService } from '../state/stateMachine';
+
 /**
  * Create string that contains 2 letters that represents which corner
  * of the piece is being given
@@ -14,6 +16,12 @@ export const randomizePiecePart = () => {
 
     return result;
 };
+/**
+ * Formula to animate ease in out cubic transitions
+ * @param x number from 0 to 1 representing progress of the animation
+ * @returns
+ */
+export const easeInOutCubic = (x: number): number => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2);
 
 /**
  * Randomizes piece part which user is able to put in fiven context
@@ -42,6 +50,21 @@ export const randomizeUniquePiecePart = (context) => {
     }
 
     return part;
+};
+
+/**
+ * Add visibility change listener to pause the game
+ */
+export const addVisibilityChangeListener = () => {
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            gameService.send({ type: 'BLUR' });
+            dispatchEvent(new CustomEvent('windowBlur'));
+        } else {
+            gameService.send({ type: 'FOCUS' });
+            dispatchEvent(new CustomEvent('windowFocus'));
+        }
+    });
 };
 
 /**
@@ -85,7 +108,7 @@ export const findMostFrequentItem = (array) => {
  * Sets key bindings to play the game
  * @param gameService
  */
-export const setKeyBindings = (gameService) => {
+export const setKeyBindings = () => {
     document.addEventListener('keyup', (e) => {
         const { controllsEnabled } = gameService.getSnapshot().context.settings;
         if (e.keyCode === 38 && controllsEnabled) {

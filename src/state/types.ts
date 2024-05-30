@@ -74,4 +74,6 @@ export type GameEvent =
     | { type: 'RIGHT_CHOICE'; value: string }
     | { type: 'COMPLETED'; value: string }
     | { type: 'CLEAR'; value: string }
-    | { type: 'GAME_OVER'; score: number };
+    | { type: 'GAME_OVER'; score: number }
+    | { type: 'BLUR' }
+    | { type: 'FOCUS' };

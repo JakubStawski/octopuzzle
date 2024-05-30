@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { gameService } from '../state/stateMachine';
 import GameBoard from './containers/GameBoard';
+import { easeInOutCubic } from '../engine/utils';
 
 import config from './config.json';
 
@@ -10,6 +11,7 @@ import Lives from './components/Lives';
 import Score from './components/Score';
 import Timer from './components/Timer';
 import Announcement from './components/Announcement';
+import Highscores from './containers/Highscores';
 
 export interface IOctisGame extends PIXI.Application {
     resources: object;
@@ -68,6 +70,11 @@ export default class Stage {
     private _announcement: PIXI.Container;
 
     /**
+     * High scores board
+     */
+    private _highscores: PIXI.Container;
+
+    /**
      * Constructor of the pixi application and its stage
      */
     constructor() {
@@ -122,6 +129,7 @@ export default class Stage {
         this._createTimer();
         this._createAnnouncement();
 
+        this._handleVisibilityChange();
         this._createLogo();
     }
 
@@ -132,6 +140,21 @@ export default class Stage {
 
         this._logo.y = -config.config.frameHeight * 1.5 - config.config.gameBoardGap * 2 - 20;
         this._gameContainer.addChild(this._logo);
+    }
+
+    /**
+     * Stops ticker on document blur, and starts it on focus
+     */
+    private _handleVisibilityChange() {
+        gameService.subscribe((state) => {
+            if (state.event.type === 'BLUR') {
+                console.log('EVENT BLUR');
+            }
+
+            if (state.event.type === 'FOCUS') {
+                console.log('EVENT FOCUS');
+            }
+        });
     }
 
     /**
@@ -150,16 +173,37 @@ export default class Stage {
     private _createAnnouncement() {
         this._announcement = new Announcement();
         this._announcement.x = 0;
-        this._announcement.y = 0;
+        this._announcement.y = -300;
+        this._announcement.alpha = 0;
+
+        this._highscores = new Highscores();
+        this._highscores.y = this._announcement.height;
 
         gameService.subscribe((state) => {
             if (state.event.type === 'GAME_OVER') {
+                let start: number;
+                const duration = 1500;
+                const showGameOver = (timestamp) => {
+                    if (!start) start = timestamp;
+                    const cubicAnimatedValue = easeInOutCubic((timestamp - start) / duration);
+
+                    this._gameContainer.alpha = 1 - cubicAnimatedValue;
+                    this._announcement.scale.set(cubicAnimatedValue, cubicAnimatedValue);
+                    this._announcement.alpha = cubicAnimatedValue;
+
+                    if (cubicAnimatedValue >= 1) return;
+                    requestAnimationFrame(showGameOver);
+                };
+
+                requestAnimationFrame(showGameOver);
+                this._announcement.scale.set(0.35, 0.35);
+
                 this._announcement.visible = true;
-                this._gameContainer.visible = false;
             }
         });
 
         this._app.stage.addChild(this._announcement);
+        this._announcement.addChild(this._highscores);
     }
 
     /**
@@ -199,20 +243,6 @@ export default class Stage {
         this._timer.y = 0;
 
         this._gameContainer.addChild(this._timer);
-    }
-
-    /**
-     * Create container that contains all the info of the player state
-     */
-    private _createPlayerPanel() {
-        this._playerPanel = new PlayerPanel('', '0x000000', this._app.screen.width, config.config.playerPanelHeight);
-
-        this._playerPanel.y = -this._app.stage.height / 2;
-
-        this._playerPanel.name = 'PlayerPanel';
-        this._playerPanel.x = 0;
-
-        this._gameContainer.addChild(this._playerPanel);
     }
 
     set resources(resources) {

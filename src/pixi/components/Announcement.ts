@@ -16,11 +16,6 @@ export default class Announcement extends PIXI.Container {
     private _gameOverText: PIXI.Text;
 
     /**
-     * Game over overlay
-     */
-    private _gameOverOverlay: PIXI.Graphics;
-
-    /**
      * Game over sprite
      */
     private _gameOverSprite: PIXI.Sprite;
@@ -38,7 +33,6 @@ export default class Announcement extends PIXI.Container {
      */
     private _init() {
         this._createAnnouncementText();
-        // this._onAnnouncement();
 
         this._createGameOverAnnouncement();
 
@@ -95,26 +89,4 @@ export default class Announcement extends PIXI.Container {
 
         this.addChild(this._announcementText);
     }
-
-    // /**
-    //  * Announcement event listener
-    //  */
-
-    // private _onAnnouncement() {
-    //     gameService.subscribe((state) => {
-
-    //         if (state.value !== 'announce') {
-    //             return;
-    //         }
-
-    //         const announcements = {
-    //             TIMEOUT: 'Time`s out',
-    //             WRONG_CHOICE: 'Fail',
-    //             COMPLETED: 'octi completed',
-    //             EXIT: 'Game over',
-    //         };
-
-    //         console.log(announcements[state.event.type]);
-    //     });
-    // }
 }
