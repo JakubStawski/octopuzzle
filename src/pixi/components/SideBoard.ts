@@ -1,14 +1,9 @@
 import * as PIXI from 'pixi.js';
-import gsap from 'gsap';
-import PixiPlugin from 'gsap/PixiPlugin';
 import { BoardSingleSide } from '../../state/types';
 import BoardSquare from './BoardSquare';
 import Piece from './Piece';
 import { gameService } from '../../state/stateMachine';
 import config from '../config.json';
-
-PixiPlugin.registerPIXI(PIXI);
-gsap.registerPlugin(PixiPlugin);
 
 /**
  * The side board component, that's the place
@@ -200,15 +195,15 @@ export default class SideBoard extends PIXI.Container {
      */
     private animateCompletedOcti() {
         for (let i = 0; i < this._piecesContainer.children.length; i += 1) {
-            gsap.to(this._piecesContainer.children[i], {
-                pixi: {
-                    scale: 0.3,
-                    alpha: 0,
-                },
-                duration: 0.2,
-                delay: 1 + i * 0.05,
-                ease: 'bounce.out',
-            });
+            const completeOcti = () => {
+                this._piecesContainer.children[i].alpha -= 0.08;
+
+                if (this._piecesContainer.children[i].alpha <= 0) return;
+
+                requestAnimationFrame(completeOcti);
+            };
+
+            setTimeout(() => requestAnimationFrame(completeOcti), 1000);
         }
     }
 }

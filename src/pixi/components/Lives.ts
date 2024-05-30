@@ -1,5 +1,4 @@
 import * as PIXI from 'pixi.js';
-import { gsap } from 'gsap';
 import { gameService } from '../../state/stateMachine';
 import config from '../config.json';
 
@@ -53,14 +52,14 @@ export default class Lives extends PIXI.Container {
         gameService.subscribe((state) => {
             if (state.event.type === 'WRONG_CHOICE' || state.event.type === 'TIMEOUT') {
                 if (state.context.player.lives - 1 >= 0) {
-                    gsap.to(this._livesIconsContainer.children[state.context.player.lives - 1], {
-                        pixi: {
-                            alpha: 0.2,
-                        },
-                        duration: 0.2,
-                        delay: 1,
-                        ease: 'slow',
-                    });
+                    const fadeOut = () => {
+                        this._livesIconsContainer.children[state.context.player.lives - 1].alpha -= 0.13;
+
+                        if (this._livesIconsContainer.children[state.context.player.lives - 1].alpha <= 0.2) return;
+                        requestAnimationFrame(fadeOut);
+                    };
+
+                    requestAnimationFrame(fadeOut);
                 }
             }
         });

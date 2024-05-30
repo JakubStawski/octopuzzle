@@ -29,6 +29,7 @@ export default class Loader {
             star: './images/star.png',
             timer: './images/timer.png',
             logo: './images/logo_small.png',
+            sadOcti: './images/sad-octi.png',
         });
 
         PIXI.Assets.load({

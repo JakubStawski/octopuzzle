@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { DropShadowFilter } from 'pixi-filters';
+import { gameService } from '../state/stateMachine';
 import GameBoard from './containers/GameBoard';
 
 import config from './config.json';
@@ -9,6 +9,7 @@ import PlayerPanel from './containers/PlayerPanel';
 import Lives from './components/Lives';
 import Score from './components/Score';
 import Timer from './components/Timer';
+import Announcement from './components/Announcement';
 
 export interface IOctisGame extends PIXI.Application {
     resources: object;
@@ -60,6 +61,11 @@ export default class Stage {
      * Game and all game components container
      */
     private _gameContainer: PIXI.Container;
+
+    /**
+     * Announcement component
+     */
+    private _announcement: PIXI.Container;
 
     /**
      * Constructor of the pixi application and its stage
@@ -114,6 +120,7 @@ export default class Stage {
         this._createLives();
         this._createScore();
         this._createTimer();
+        this._createAnnouncement();
 
         this._createLogo();
     }
@@ -135,6 +142,24 @@ export default class Stage {
         this._gameBoard.y = config.config.playerPanelHeight - config.config.gameBoardGap;
 
         this._gameContainer.addChild(this._gameBoard);
+    }
+
+    /**
+     * Creates announcement component
+     */
+    private _createAnnouncement() {
+        this._announcement = new Announcement();
+        this._announcement.x = 0;
+        this._announcement.y = 0;
+
+        gameService.subscribe((state) => {
+            if (state.event.type === 'GAME_OVER') {
+                this._announcement.visible = true;
+                this._gameContainer.visible = false;
+            }
+        });
+
+        this._app.stage.addChild(this._announcement);
     }
 
     /**

@@ -113,19 +113,18 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
                 CONTINUE: {
                     target: 'idle',
                 },
-                EXIT: 'high_scores',
+                GAME_OVER: 'game_over',
             },
         },
-        // game_over: {
-        //     entry: gameEngine.gameOverHandler,
-        //     on: {
-        //         CONTINUE: 'high_score',
-        //     },
-        // },
+        game_over: {
+            on: {
+                CONTINUE: 'high_scores',
+            },
+        },
         high_scores: {
             entry: gameEngine.showHighScores,
             on: {
-                EXIT: 'main_screen',
+                CONTINUE: 'main_screen',
             },
         },
         main_screen: {

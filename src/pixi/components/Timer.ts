@@ -1,5 +1,4 @@
 import * as PIXI from 'pixi.js';
-import { gsap } from 'gsap';
 import { gameService } from '../../state/stateMachine';
 
 import config from '../config.json';
@@ -107,17 +106,23 @@ export default class Timer extends PIXI.Container {
         gameService.subscribe((state) => {
             this._handleAnnouncement(state);
             if (state.event.type === 'START' || state.event.type === 'CONTINUE') {
-                gsap.fromTo(
-                    this._timerProgressBar,
-                    {
-                        width: this._timerContainer.width,
-                    },
-                    {
-                        width: 0,
-                        duration: state.context.player.timeoutID.getTimeLeft() / 1000,
-                        ease: 'none',
-                    },
-                );
+                let start: number;
+                const duration = state.context.player.timeoutID.getTimeLeft() / 100;
+
+                const decreaseTime = (timestamp: number) => {
+                    if (!start) {
+                        start = timestamp;
+                    }
+
+                    this._timerProgressBar.width =
+                        (this._timerContainer.width * (100 - (timestamp - start) / duration)) / 100;
+
+                    if (this._timerProgressBar.width <= 0) return;
+                    requestAnimationFrame(decreaseTime);
+                };
+
+                this._timerProgressBar.width = this._timerContainer.width;
+                requestAnimationFrame(decreaseTime);
             }
         });
     }

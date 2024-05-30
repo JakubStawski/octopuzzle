@@ -60,6 +60,7 @@ export interface GameState {
         lose: object;
         add_score: object;
         high_scores: object;
+        game_over: object;
     };
 }
 
@@ -72,4 +73,5 @@ export type GameEvent =
     | { type: 'WRONG_CHOICE' }
     | { type: 'RIGHT_CHOICE'; value: string }
     | { type: 'COMPLETED'; value: string }
-    | { type: 'CLEAR'; value: string };
+    | { type: 'CLEAR'; value: string }
+    | { type: 'GAME_OVER'; score: number };

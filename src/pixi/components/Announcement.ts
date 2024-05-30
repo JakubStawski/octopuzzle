@@ -11,6 +11,21 @@ export default class Announcement extends PIXI.Container {
     private _announcementText: PIXI.Text;
 
     /**
+     * Game over announcement text
+     */
+    private _gameOverText: PIXI.Text;
+
+    /**
+     * Game over overlay
+     */
+    private _gameOverOverlay: PIXI.Graphics;
+
+    /**
+     * Game over sprite
+     */
+    private _gameOverSprite: PIXI.Sprite;
+
+    /**
      * Constructor of a component
      */
     constructor() {
@@ -23,10 +38,40 @@ export default class Announcement extends PIXI.Container {
      */
     private _init() {
         this._createAnnouncementText();
+        // this._onAnnouncement();
 
-        gameService.subscribe((state) => {
-            this._handleAnnouncement(state);
+        this._createGameOverAnnouncement();
+
+        this.visible = false;
+    }
+
+    /**
+     * Creates game over announcement
+     */
+    private _createGameOverAnnouncement() {
+        const textStyle = new PIXI.TextStyle({
+            fontFamily: 'Playground',
+            lineJoin: 'round',
+            fontSize: 200,
+            fill: '0xffffff',
         });
+
+        this._gameOverText = new PIXI.Text('Game over', textStyle);
+        this._gameOverText.anchor.set(0.5, 0.5);
+
+        this._createGameOverSprite();
+
+        this.addChild(this._gameOverText);
+    }
+
+    /**
+     * Creates sad octopus sprite
+     */
+    private _createGameOverSprite() {
+        this._gameOverSprite = new PIXI.Sprite(PIXI.Assets.cache.get('sadOcti'));
+        this._gameOverSprite.anchor.set(0.5, 0.5);
+        this._gameOverSprite.y = -this._gameOverText.height + 30;
+        this.addChild(this._gameOverSprite);
     }
 
     /**
@@ -51,28 +96,25 @@ export default class Announcement extends PIXI.Container {
         this.addChild(this._announcementText);
     }
 
-    /**
-     * Thing that happen after announcement state is set
-     * @param state current game state
-     */
-    private _handleAnnouncement(state) {
-        if (state.context.player.lives < 0) {
-            this._announcementText.visible = true;
-        }
+    // /**
+    //  * Announcement event listener
+    //  */
 
-        if (state.value !== 'announce' && state.context.player.lives >= 0) {
-            this._announcementText.visible = false;
-            return;
-        }
+    // private _onAnnouncement() {
+    //     gameService.subscribe((state) => {
 
-        const announcements = {
-            TIMEOUT: 'Time`s out',
-            WRONG_CHOICE: 'Fail',
-            COMPLETED: 'octi completed',
-            EXIT: 'Game over',
-        };
+    //         if (state.value !== 'announce') {
+    //             return;
+    //         }
 
-        this._announcementText.text = announcements[state.event.type];
-        this._announcementText.visible = true;
-    }
+    //         const announcements = {
+    //             TIMEOUT: 'Time`s out',
+    //             WRONG_CHOICE: 'Fail',
+    //             COMPLETED: 'octi completed',
+    //             EXIT: 'Game over',
+    //         };
+
+    //         console.log(announcements[state.event.type]);
+    //     });
+    // }
 }

@@ -159,7 +159,7 @@ export const loseHp = (context) => {
     context.player.lives -= 1;
 
     if (context.player.lives < 0) {
-        gameService.send({ type: 'EXIT', score: context.player.lives });
+        gameService.send({ type: 'GAME_OVER', score: context.player.score });
         window.dispatchEvent(gameOverSound);
         return;
     }
