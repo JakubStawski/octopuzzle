@@ -69,11 +69,6 @@ export default class Stage {
     private _highscores: PIXI.Container;
 
     /**
-     * play again button
-     */
-    private _playAgainButton: PIXI.Container;
-
-    /**
      * Constructor of the pixi application and its stage
      */
     constructor() {
@@ -191,7 +186,7 @@ export default class Stage {
         this._announcement.x = 0;
         this._announcement.y = -300;
 
-        this._highscores = new Highscores(this._playAgainButton);
+        this._highscores = new Highscores();
         this._highscores.y = this._announcement.height - 120;
 
         gameService.subscribe((state) => {

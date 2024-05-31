@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js';
+import { clickSound } from '../../engine/game';
 import { gameService } from '../../state/stateMachine';
 import { IHighscoresBoard } from '../types';
 import config from '../config.json';
@@ -59,7 +60,10 @@ export default class Highscores extends PIXI.Container {
     }
 
     private _createPlayAgainButton() {
-        this._playAgainButton = new Button(() => gameService.send({ type: 'CONTINUE' }), 'Play again');
+        this._playAgainButton = new Button(() => {
+            gameService.send({ type: 'CONTINUE' });
+            window.dispatchEvent(clickSound);
+        }, 'Play again');
         this._playAgainButton.x = this.width / 2 - this._playAgainButton.width - 80;
         this._playAgainButton.y = this.height / 2 - this._playAgainButton.height - 80;
     }

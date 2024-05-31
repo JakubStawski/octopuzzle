@@ -2,6 +2,15 @@
 
 import { gameService } from '../state/stateMachine';
 
+export const clickSound = new CustomEvent('clickEvent');
+export const winSound = new CustomEvent('winEvent');
+export const loseSound = new CustomEvent('loseEvent');
+export const completeSound = new CustomEvent('completeEvent');
+// export const completeSound2 = new CustomEvent('complete2');
+// export const completeSound3 = new CustomEvent('complete3');
+export const gameStartedSound = new CustomEvent('gameStartedEvent');
+export const gameOverSound = new CustomEvent('gameOverEvent');
+
 /**
  * Create string that contains 2 letters that represents which corner
  * of the piece is being given
@@ -111,6 +120,9 @@ export const findMostFrequentItem = (array) => {
 export const setKeyBindings = () => {
     document.addEventListener('keyup', (e) => {
         const { controllsEnabled } = gameService.getSnapshot().context.settings;
+
+        if (controllsEnabled) window.dispatchEvent(clickSound);
+
         if (e.keyCode === 38 && controllsEnabled) {
             gameService.send({ type: 'CHOICE', value: 'top' });
             return;

@@ -1,7 +1,10 @@
 import { gameService } from './state/stateMachine';
 import Stage from './pixi/Stage';
 import { setKeyBindings, addVisibilityChangeListener } from './engine/utils';
-import { clickSound, gameStartedSound } from './engine/game';
+import { gameStartedSound } from './engine/game';
+import SoundMediator from './engine/SoundMediator';
+
+const soundMediator = new SoundMediator();
 
 // Start game function to export as a package
 const startGame = () => {

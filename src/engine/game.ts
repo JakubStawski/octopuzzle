@@ -1,27 +1,13 @@
 import { IHighscoresBoard } from 'src/pixi/types';
-import { assign } from 'xstate';
 import { gameService } from '../state/stateMachine';
 import { findMostFrequentItem, randomizePieceColor, randomizeUniquePiecePart, Timer } from './utils';
 
 export const clickSound = new CustomEvent('clickEvent');
-export const winSound = new CustomEvent('win');
-export const loseSound = new CustomEvent('lose');
-export const completeSound = new CustomEvent('complete');
-export const completeSound2 = new CustomEvent('complete2');
-export const completeSound3 = new CustomEvent('complete3');
-export const gameStartedSound = new CustomEvent('gameStarted');
-export const gameOverSound = new CustomEvent('gameOver');
-
-const customEvents: string[] = [
-    'clickEvent',
-    'win',
-    'lose',
-    'complete',
-    'complete2',
-    'complete3',
-    'gameStarted',
-    'gameOver',
-];
+export const winSound = new CustomEvent('winEvent');
+export const loseSound = new CustomEvent('loseEvent');
+export const completeSound = new CustomEvent('completeEvent');
+export const gameStartedSound = new CustomEvent('gameStartedEvent');
+export const gameOverSound = new CustomEvent('gameOverEvent');
 
 /**
  * Function that randomizes a piece with given context
@@ -47,13 +33,14 @@ export const randomizePiece = (context) => {
  */
 export const checkChoice = (context, event) => {
     if (context.board[event.value][context.piece.part] !== undefined) {
-        gameService.send({ type: 'WRONG_CHOICE' });
         window.dispatchEvent(loseSound);
+
+        gameService.send({ type: 'WRONG_CHOICE' });
+
         return;
     }
 
     gameService.send({ type: 'RIGHT_CHOICE', value: event.value });
-    window.dispatchEvent(winSound);
 };
 
 /**
@@ -68,6 +55,7 @@ export const checkCompletion = (context) => {
     Object.keys(context.board).forEach((item) => {
         if (Object.keys(context.board[item]).length === 4) {
             isCompleted = true;
+            window.dispatchEvent(winSound);
             gameService.send({ type: 'COMPLETED', value: item });
             array = Object.keys(context.board[item]).map((el) => context.board[item][el].color);
         }
@@ -76,17 +64,6 @@ export const checkCompletion = (context) => {
     if (isCompleted) {
         const { count } = findMostFrequentItem(array);
 
-        if (count === 3) {
-            window.dispatchEvent(completeSound2);
-            return;
-        }
-
-        if (count === 4) {
-            window.dispatchEvent(completeSound3);
-            return;
-        }
-
-        window.dispatchEvent(completeSound);
         return;
     }
     gameService.send({ type: 'CONTINUE' });
@@ -162,7 +139,7 @@ export const loseHp = (context) => {
 
     if (context.player.lives < 0) {
         gameService.send({ type: 'GAME_OVER', score: context.player.score });
-        window.dispatchEvent(gameOverSound);
+
         return;
     }
 
@@ -268,6 +245,7 @@ export const clearCompletedBoard = (sideToClear, context, event) => {
  */
 export const mountTimeout = (context) => {
     const timeoutID = new Timer(() => {
+        window.dispatchEvent(loseSound);
         gameService.send({ type: 'TIMEOUT' });
     }, context.piece.remainingTime);
 
