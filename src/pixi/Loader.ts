@@ -31,6 +31,10 @@ export default class Loader {
             logo: './images/logo_small.png',
             sadOcti: './images/sad-octi.png',
             highscores: './images/highscores-bg.png',
+            'bronze-medal': './images/bronze-medal.png',
+            'silver-medal': './images/silver-medal.png',
+            'gold-medal': './images/gold-medal.png',
+            'button-long': './images/button-long.png',
         });
 
         PIXI.Assets.load({

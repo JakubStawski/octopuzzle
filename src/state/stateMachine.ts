@@ -119,7 +119,7 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
         game_over: {
             entry: [gameEngine.addScoreToHighScores],
             on: {
-                CONTINUE: 'high_scores',
+                CONTINUE: 'reset',
             },
         },
         high_scores: {
@@ -128,7 +128,14 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
                 CONTINUE: 'main_screen',
             },
         },
+        reset: {
+            entry: [gameEngine.setInitialState, gameEngine.resetGameView],
+            on: {
+                CONTINUE: 'idle',
+            },
+        },
         main_screen: {
+            entry: gameEngine.setInitialState,
             on: {
                 START: {
                     target: 'idle',

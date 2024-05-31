@@ -37,6 +37,7 @@ export default class Announcement extends PIXI.Container {
         this._createGameOverAnnouncement();
 
         this.visible = false;
+        this.alpha = 0;
     }
 
     /**
@@ -47,7 +48,9 @@ export default class Announcement extends PIXI.Container {
             fontFamily: 'Playground',
             lineJoin: 'round',
             fontSize: 200,
-            fill: '0xffffff',
+            fill: '0x81d9ff',
+            strokeThickness: 20,
+            stroke: '0xffffff',
         });
 
         this._gameOverText = new PIXI.Text('Game over', textStyle);

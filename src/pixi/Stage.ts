@@ -6,7 +6,6 @@ import { easeInOutCubic } from '../engine/utils';
 import config from './config.json';
 
 import Loader from './Loader';
-import PlayerPanel from './containers/PlayerPanel';
 import Lives from './components/Lives';
 import Score from './components/Score';
 import Timer from './components/Timer';
@@ -27,11 +26,6 @@ export default class Stage {
      * Game board container
      */
     private _gameBoard: PIXI.Container;
-
-    /**
-     * Panel that contains lives, times and score of the player
-     */
-    private _playerPanel: PIXI.DisplayObject;
 
     /**
      * Resources loaded by loader
@@ -75,6 +69,11 @@ export default class Stage {
     private _highscores: PIXI.Container;
 
     /**
+     * play again button
+     */
+    private _playAgainButton: PIXI.Container;
+
+    /**
      * Constructor of the pixi application and its stage
      */
     constructor() {
@@ -98,6 +97,24 @@ export default class Stage {
         window.addEventListener('resize', this._resize.bind(this));
 
         window.addEventListener('assetsLoaded', this._init.bind(this));
+
+        this._resetGame();
+    }
+
+    /**
+     * destroy everything after game
+     */
+    private _resetGame() {
+        gameService.subscribe((state) => {
+            if (state.event.type === 'RESET') {
+                if (this._gameContainer) this._gameContainer.destroy();
+                if (this._announcement) this._announcement.destroy();
+
+                this._init();
+
+                gameService.send({ type: 'CONTINUE' });
+            }
+        });
     }
 
     /**
@@ -122,7 +139,6 @@ export default class Stage {
         this._gameContainer.y += 20;
 
         this._createGameBoard();
-        // this._createPlayerPanel();
         this._resize();
         this._createLives();
         this._createScore();
@@ -148,11 +164,11 @@ export default class Stage {
     private _handleVisibilityChange() {
         gameService.subscribe((state) => {
             if (state.event.type === 'BLUR') {
-                console.log('EVENT BLUR');
+                // todo blur handler
             }
 
             if (state.event.type === 'FOCUS') {
-                console.log('EVENT FOCUS');
+                // todo focus handler
             }
         });
     }
@@ -174,10 +190,9 @@ export default class Stage {
         this._announcement = new Announcement();
         this._announcement.x = 0;
         this._announcement.y = -300;
-        this._announcement.alpha = 0;
 
-        this._highscores = new Highscores();
-        this._highscores.y = this._announcement.height;
+        this._highscores = new Highscores(this._playAgainButton);
+        this._highscores.y = this._announcement.height - 120;
 
         gameService.subscribe((state) => {
             if (state.event.type === 'GAME_OVER') {
@@ -190,6 +205,7 @@ export default class Stage {
                     this._gameContainer.alpha = 1 - cubicAnimatedValue;
                     this._announcement.scale.set(cubicAnimatedValue, cubicAnimatedValue);
                     this._announcement.alpha = cubicAnimatedValue;
+                    this._highscores.alpha = cubicAnimatedValue;
 
                     if (cubicAnimatedValue >= 1) return;
                     requestAnimationFrame(showGameOver);
@@ -197,7 +213,6 @@ export default class Stage {
 
                 requestAnimationFrame(showGameOver);
                 this._announcement.scale.set(0.35, 0.35);
-
                 this._announcement.visible = true;
             }
         });

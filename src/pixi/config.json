@@ -20,6 +20,8 @@
         "scoreIconHeight": 70,
         "playerStatusGap": 40,
         "timerWidth": 475,
-        "timerHeight": 71
+        "timerHeight": 71,
+        "highscoresRecordHeight": 50,
+        "highscoresMedalWidth": 80
     }
 }

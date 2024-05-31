@@ -47,7 +47,7 @@ export default class Score extends PIXI.Container {
             fill: '0xffffff',
         });
 
-        this._scoreText = new PIXI.Text('0', textStyle);
+        this._scoreText = new PIXI.Text(0, textStyle);
         this._scoreText.anchor.set(0, 0.5);
 
         this._scoreText.x = this._scoreIcon.width;
@@ -77,7 +77,19 @@ export default class Score extends PIXI.Container {
     private _onScoreChange() {
         gameService.subscribe((state) => {
             if (state.event.type === 'COMPLETED' || state.event.type === 'CONTINUE') {
-                this._scoreText.text = state.context.player.score;
+                let points = parseInt(this._scoreText.text, 10);
+                let start: number;
+                const duration = 1000;
+                const countUp = (timestamp: number) => {
+                    if (!start) start = timestamp;
+
+                    const elapsed = (timestamp - start) / duration;
+                    this._scoreText.text = points;
+                    if (points >= state.context.player.score) return;
+                    points += Math.ceil(elapsed * (state.context.player.score - points));
+                    requestAnimationFrame(countUp);
+                };
+                requestAnimationFrame(countUp);
             }
         });
     }

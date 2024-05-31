@@ -1,4 +1,5 @@
 import { IHighscoresBoard } from 'src/pixi/types';
+import { assign } from 'xstate';
 import { gameService } from '../state/stateMachine';
 import { findMostFrequentItem, randomizePieceColor, randomizeUniquePiecePart, Timer } from './utils';
 
@@ -178,6 +179,36 @@ export const showHighScores = (context) => {
     });
 };
 
+export const setInitialState = (context) => {
+    context.board = {
+        top: {},
+        left: {},
+        right: {},
+        bottom: {},
+    };
+    context.piece = {
+        remainingTime: 3000,
+        part: 'lt',
+        color: 2,
+    };
+    context.player = {
+        score: 0,
+        lives: 4,
+        timeoutID: null,
+        timeAcceleration: 1,
+    };
+    context.settings = {
+        controllsEnabled: true,
+    };
+};
+
+/**
+ * Reset game view
+ */
+export const resetGameView = () => {
+    gameService.send({ type: 'RESET' });
+};
+
 /**
  * Adding score to the highscores
  * @param context state of the game
@@ -204,11 +235,9 @@ export const addScoreToHighScores = (context) => {
     };
     highScoreBoard.sort(compareFn);
 
-    if (highScoreBoard.length > 3) {
+    if (highScoreBoard.length > 10) {
         highScoreBoard.pop();
     }
-
-    console.log('no 1');
 
     localStorage.setItem('highScoreBoard', JSON.stringify(highScoreBoard));
 };

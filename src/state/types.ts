@@ -61,6 +61,7 @@ export interface GameState {
         add_score: object;
         high_scores: object;
         game_over: object;
+        reset: object;
     };
 }
 
@@ -76,4 +77,5 @@ export type GameEvent =
     | { type: 'CLEAR'; value: string }
     | { type: 'GAME_OVER'; score: number }
     | { type: 'BLUR' }
-    | { type: 'FOCUS' };
+    | { type: 'FOCUS' }
+    | { type: 'RESET' };

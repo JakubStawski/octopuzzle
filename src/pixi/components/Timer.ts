@@ -106,6 +106,7 @@ export default class Timer extends PIXI.Container {
         gameService.subscribe((state) => {
             this._handleAnnouncement(state);
             if (state.event.type === 'START' || state.event.type === 'CONTINUE') {
+                if (!state.context.player.timeoutID) return;
                 let start: number;
                 const duration = state.context.player.timeoutID.getTimeLeft() / 100;
 
