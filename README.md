@@ -60,6 +60,15 @@ The Vite dev server opens the game in the browser.
 | `npm run preview` | Preview the production build |
 | `npm run lint` | Run ESLint on `src/` |
 
+## GitHub Pages
+
+This repo deploys via GitHub Actions (`.github/workflows/deploy-pages.yml`) on every push to `main`.
+
+1. Push the workflow to `main`.
+2. In the repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+3. After the workflow succeeds, the game is at:
+   `https://jakubstawski.github.io/Octopuses/`
+
 ## Project structure
 
 ```
