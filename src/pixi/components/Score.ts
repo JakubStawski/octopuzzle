@@ -18,6 +18,16 @@ export default class Score extends PIXI.Container {
     private _scoreIcon: PIXI.Sprite;
 
     /**
+     * Unsubscribe from game service
+     */
+    private _unsubscribe: () => void;
+
+    /**
+     * Active count-up animation frame
+     */
+    private _rafId: number | null = null;
+
+    /**
      * Constructor of the component
      */
     constructor() {
@@ -70,27 +80,61 @@ export default class Score extends PIXI.Container {
         this.addChild(this._scoreIcon);
     }
 
+    private _cancelCountUp() {
+        if (this._rafId !== null) {
+            cancelAnimationFrame(this._rafId);
+            this._rafId = null;
+        }
+    }
+
     /**
      * Subscribes the state, listens for changes
      * and sets previously created text to value based on state
      */
     private _onScoreChange() {
-        gameService.subscribe((state) => {
-            if (state.event.type === 'COMPLETED' || state.event.type === 'CONTINUE') {
-                let points = parseInt(this._scoreText.text, 10);
+        const subscription = gameService.subscribe((state) => {
+            const displayed = parseInt(this._scoreText.text, 10) || 0;
+            const target = state.context.player.score;
+
+            if (state.matches('main_screen') || state.event.type === 'START') {
+                this._cancelCountUp();
+                this._scoreText.text = target;
+                return;
+            }
+
+            if (target > displayed && (state.matches('idle') || state.matches('add_score'))) {
+                this._cancelCountUp();
+
+                let points = displayed;
                 let start: number;
                 const duration = 1000;
+
                 const countUp = (timestamp: number) => {
+                    if (this.destroyed) {
+                        return;
+                    }
+
                     if (!start) start = timestamp;
 
                     const elapsed = (timestamp - start) / duration;
                     this._scoreText.text = points;
-                    if (points >= state.context.player.score) return;
-                    points += Math.ceil(elapsed * (state.context.player.score - points));
-                    requestAnimationFrame(countUp);
+                    if (points >= target) {
+                        this._scoreText.text = target;
+                        this._rafId = null;
+                        return;
+                    }
+                    points += Math.ceil(elapsed * (target - points));
+                    this._rafId = requestAnimationFrame(countUp);
                 };
-                requestAnimationFrame(countUp);
+                this._rafId = requestAnimationFrame(countUp);
             }
         });
+        this._unsubscribe = () => subscription.unsubscribe();
+    }
+
+    destroy(options?: boolean | PIXI.IDestroyOptions) {
+        this._unsubscribe?.();
+        this._cancelCountUp();
+        super.destroy(options);
     }
 }

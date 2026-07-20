@@ -1,25 +1,6 @@
-import { createMachine, interpret } from 'xstate';
+import { assign, createMachine, interpret } from 'xstate';
 import * as gameEngine from '../engine/game';
 import { GameContext, GameState, GameEvent } from './types';
-
-/**
- * Condition for stateMachines announcement state that determines if player lost
- * @param context current state of the game
- * @param event events that has been sent
- * @param condMeta condition meta
- * @returns boolean
- */
-const didPlayerLose = (context, event, condMeta) =>
-    condMeta.state.event.type === 'TIMEOUT' || condMeta.state.event.type === 'WRONG_CHOICE';
-
-/**
- * Condition for stateMachines announcement state that determines if player won
- * @param context current state of the game
- * @param event events that has been sent
- * @param condMeta condition meta
- * @returns boolean
- */
-const didPlayerWin = (context, event, condMeta) => condMeta.state.event.type === 'COMPLETED';
 
 /**
  * Game state machine
@@ -47,7 +28,28 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
             timeAcceleration: 1,
         },
         settings: {
-            controllsEnabled: true,
+            controlsEnabled: true,
+            musicEnabled: localStorage.getItem('musicEnabled') !== 'false',
+        },
+        announceOutcome: null,
+    },
+    on: {
+        MUTE: {
+            actions: [
+                assign({
+                    settings: (context) => ({
+                        ...context.settings,
+                        musicEnabled: !context.settings.musicEnabled,
+                    }),
+                }),
+                gameEngine.persistMusicSetting,
+            ],
+        },
+        BLUR: {
+            actions: gameEngine.pauseTimeout,
+        },
+        FOCUS: {
+            actions: gameEngine.resumeTimeout,
         },
     },
     states: {
@@ -60,21 +62,23 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
                 },
                 TIMEOUT: {
                     target: 'announce',
+                    actions: assign({ announceOutcome: () => 'lose' as const }),
                 },
             },
         },
         announce: {
-            entry: [gameEngine.blockUserControlls],
+            entry: [gameEngine.blockUserControls],
             after: {
                 2000: [
                     {
                         target: 'lose',
-                        cond: didPlayerLose,
-                        actions: [gameEngine.unblockUserControlls],
+                        cond: (context) => context.announceOutcome === 'lose',
+                        actions: [gameEngine.unblockUserControls],
                     },
                     {
                         target: 'add_score',
-                        cond: didPlayerWin,
+                        cond: (context) => context.announceOutcome === 'win',
+                        actions: [gameEngine.unblockUserControls],
                     },
                 ],
             },
@@ -83,9 +87,8 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
             entry: [
                 gameEngine.calculatePointsAfterCompletion,
                 gameEngine.accelerateTime,
-                gameEngine.unblockUserControlls,
+                gameEngine.unblockUserControls,
             ],
-
             on: {
                 CONTINUE: {
                     target: 'idle',
@@ -96,19 +99,24 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
             entry: [gameEngine.checkChoice],
             on: {
                 RIGHT_CHOICE: { target: 'win', actions: gameEngine.assignPieceToBoard },
-                WRONG_CHOICE: 'announce',
+                WRONG_CHOICE: {
+                    target: 'announce',
+                    actions: assign({ announceOutcome: () => 'lose' as const }),
+                },
             },
         },
         win: {
             entry: gameEngine.checkCompletion,
             on: {
-                COMPLETED: 'announce',
+                COMPLETED: {
+                    target: 'announce',
+                    actions: assign({ announceOutcome: () => 'win' as const }),
+                },
                 CONTINUE: 'idle',
             },
         },
         lose: {
             entry: [gameEngine.resetTimeAcceleration, gameEngine.loseHp],
-
             on: {
                 CONTINUE: {
                     target: 'idle',
@@ -119,19 +127,15 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
         game_over: {
             entry: [gameEngine.addScoreToHighScores],
             on: {
-                CONTINUE: 'reset',
+                MAIN_MENU: {
+                    target: 'main_screen',
+                    actions: [gameEngine.setInitialState],
+                },
             },
         },
         high_scores: {
-            entry: gameEngine.showHighScores,
             on: {
-                CONTINUE: 'main_screen',
-            },
-        },
-        reset: {
-            entry: [gameEngine.setInitialState, gameEngine.resetGameView],
-            on: {
-                CONTINUE: 'idle',
+                MAIN_MENU: 'main_screen',
             },
         },
         main_screen: {
@@ -140,9 +144,28 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
                 START: {
                     target: 'idle',
                 },
+                HIGH_SCORES: {
+                    target: 'high_scores',
+                },
+                SETTINGS: {
+                    target: 'settings',
+                },
+                CREDITS: {
+                    target: 'credits',
+                },
+            },
+        },
+        settings: {
+            on: {
+                MAIN_MENU: 'main_screen',
+            },
+        },
+        credits: {
+            on: {
+                MAIN_MENU: 'main_screen',
             },
         },
     },
 });
 
-export const gameService = interpret(gameMachine).onTransition((context, event) => {});
+export const gameService = interpret(gameMachine);

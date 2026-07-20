@@ -5,7 +5,6 @@ import Piece from './Piece';
 import { gameService } from '../../state/stateMachine';
 
 import config from '../config.json';
-import { IOctisGame } from '../Stage';
 
 /**
  * Create board that represents current piece
@@ -53,6 +52,11 @@ export default class CenterBoard extends PIXI.Container {
     private _lbPosition: number[];
 
     /**
+     * Unsubscribe from game service
+     */
+    private _unsubscribe: () => void;
+
+    /**
      * Constructor of a center board component
      * @param width number
      * @param height  number
@@ -70,7 +74,7 @@ export default class CenterBoard extends PIXI.Container {
      * Initialize component
      */
     private _init() {
-        this._boardSquare = new BoardSquare('', '0x000000', this._w, this._h);
+        this._boardSquare = new BoardSquare('', '0x000000');
 
         this._onPieceRefresh();
     }
@@ -79,18 +83,22 @@ export default class CenterBoard extends PIXI.Container {
      * Subscribe to the context and listens for changes to the pieces state
      */
     private _onPieceRefresh() {
-        gameService.subscribe((state) => {
-            if (state.value === 'announce') {
-                this._currentPiece.destroy();
+        const subscription = gameService.subscribe((state) => {
+            if (state.matches('announce') || state.matches('game_over') || state.context.player.lives <= 0) {
+                if (this._currentPiece && !this._currentPiece.destroyed) {
+                    this._currentPiece.destroy();
+                    this._currentPiece = undefined;
+                }
                 return;
             }
 
-            if (state.context.player.lives < 0) {
+            if (!state.matches('idle')) {
                 return;
             }
 
             this._createCurrentPiece(state.context.piece.part, state.context.piece.color.toString());
         });
+        this._unsubscribe = () => subscription.unsubscribe();
     }
 
     /**
@@ -99,7 +107,9 @@ export default class CenterBoard extends PIXI.Container {
      * @param color number [0 - 3] that represents the color of a piece
      */
     private _createCurrentPiece(part, color) {
-        if (this._currentPiece !== undefined) this._currentPiece.destroy();
+        if (this._currentPiece !== undefined && !this._currentPiece.destroyed) {
+            this._currentPiece.destroy();
+        }
         this._currentPiece = new Piece('CurrentPiece', part, color);
 
         const position = this._positionPieceOnBoard(part);
@@ -122,5 +132,10 @@ export default class CenterBoard extends PIXI.Container {
         this._lbPosition = [-config.config.octiPartPositionOnBoard, config.config.octiPartPositionOnBoard];
 
         return this[`_${part}Position`];
+    }
+
+    destroy(options?: boolean | PIXI.IDestroyOptions) {
+        this._unsubscribe?.();
+        super.destroy(options);
     }
 }

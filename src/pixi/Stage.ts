@@ -9,14 +9,18 @@ import Loader from './Loader';
 import Lives from './components/Lives';
 import Score from './components/Score';
 import Timer from './components/Timer';
-import Announcement from './components/Announcement';
 import Highscores from './containers/Highscores';
+import Credits from './containers/Credits';
+import Settings from './containers/Settings';
+import MainMenu from './containers/MainMenu';
 
 export interface IOctisGame extends PIXI.Application {
     resources: object;
 }
 
 export default class Stage {
+    private static readonly DESIGN_SIZE = 1800;
+
     /**
      * Pixi application
      */
@@ -56,94 +60,128 @@ export default class Stage {
     /**
      * Game and all game components container
      */
-    private _gameContainer: PIXI.Container;
-
-    /**
-     * Announcement component
-     */
-    private _announcement: PIXI.Container;
+    private _gameContainer: PIXI.Container | null = null;
 
     /**
      * High scores board
      */
-    private _highscores: PIXI.Container;
+    private _highscores: PIXI.Container | null = null;
+
+    /**
+     * Credits screen
+     */
+    private _credits: PIXI.Container | null = null;
+
+    /**
+     * Settings screen
+     */
+    private _settings: PIXI.Container | null = null;
+
+    /**
+     * main menu container
+     */
+    private _mainMenu: PIXI.Container | null = null;
+
+    /**
+     * Unsubscribe from game service
+     */
+    private _unsubscribe: () => void;
+
+    /**
+     * Active game-over animation frame
+     */
+    private _gameOverRafId: number | null = null;
 
     /**
      * Constructor of the pixi application and its stage
      */
     constructor() {
+        const existingCanvas = document.querySelector('canvas');
+
         this._app = new PIXI.Application({
-            resizeTo: document.querySelector('canvas'),
-            resolution: 2,
-            width: 1800,
-            height: 1800,
+            width: Stage.DESIGN_SIZE,
+            height: Stage.DESIGN_SIZE,
+            resolution: Math.min(window.devicePixelRatio || 1, 2),
+            autoDensity: true,
             backgroundAlpha: 0,
         });
 
         this._resources = new Loader();
 
         globalThis.__PIXI_APP__ = this._app;
-        if (!document.querySelector('canvas')) {
+        if (!existingCanvas) {
             document.querySelector('body').appendChild(this._app.view as HTMLCanvasElement);
         }
 
         this._app.stage.scale.set(1, 1);
-        this._app.stage.position.set(this._app.renderer.screen.width / 2, this._app.renderer.screen.height / 2);
+        this._app.stage.position.set(Stage.DESIGN_SIZE / 2, Stage.DESIGN_SIZE / 2);
         window.addEventListener('resize', this._resize.bind(this));
+        this._resize();
 
         window.addEventListener('assetsLoaded', this._init.bind(this));
 
-        this._resetGame();
+        this._subscribeEvents();
     }
 
     /**
-     * destroy everything after game
-     */
-    private _resetGame() {
-        gameService.subscribe((state) => {
-            if (state.event.type === 'RESET') {
-                if (this._gameContainer) this._gameContainer.destroy();
-                if (this._announcement) this._announcement.destroy();
-
-                this._init();
-
-                gameService.send({ type: 'CONTINUE' });
-            }
-        });
-    }
-
-    /**
-     * Resize function
+     * Fit square canvas into the viewport without distorting aspect ratio
      */
     private _resize() {
-        // this._app.stage.width = this._app.screen.width - config.config.mainStagePadding;
-        // this._app.stage.height = this._app.screen.height - config.config.mainStagePadding;
+        const view = this._app.view as HTMLCanvasElement;
+        const scale = Math.min(window.innerWidth / Stage.DESIGN_SIZE, window.innerHeight / Stage.DESIGN_SIZE);
+        const displaySize = Math.floor(Stage.DESIGN_SIZE * scale);
+
+        view.style.width = `${displaySize}px`;
+        view.style.height = `${displaySize}px`;
+    }
+
+    /**
+     * create Main Menu
+     */
+    private _createMainMenu() {
+        this._mainMenu = new MainMenu();
+
+        this._app.stage.addChild(this._mainMenu);
     }
 
     /**
      * Init the game
      */
     private _init() {
-        this._gameContainer = new PIXI.Container();
-        this._gameContainer.name = 'Game_MainContainer';
-        this._app.stage.addChild(this._gameContainer);
-
-        this._gameContainer.width = this._app.screen.width - config.config.mainStagePadding;
-        this._gameContainer.height = this._app.screen.height - config.config.mainStagePadding;
-
-        this._gameContainer.y += 20;
-
-        this._createGameBoard();
         this._resize();
+
+        this._createMainMenu();
+        this._createGameElements();
+        this._createHighScores();
+        this._createCredits();
+        this._createSettings();
+        this._syncScreens(gameService.getSnapshot());
+    }
+
+    private _createGameElements() {
+        this._createGameContainer();
+        this._createLogo();
+        this._createGameBoard();
         this._createLives();
         this._createScore();
         this._createTimer();
-        this._createAnnouncement();
-
-        this._handleVisibilityChange();
-        this._createLogo();
     }
 
+    /**
+     * Create game container
+     */
+    private _createGameContainer() {
+        this._gameContainer = new PIXI.Container();
+        this._gameContainer.name = 'Game_MainContainer';
+        this._gameContainer.visible = false;
+        this._gameContainer.alpha = 1;
+        this._gameContainer.y = 20;
+        this._app.stage.addChild(this._gameContainer);
+    }
+
+    /**
+     * Creates logo and adds it to the stage
+     */
     private _createLogo() {
         this._logo = new PIXI.Sprite(PIXI.Assets.cache.get('logo'));
         this._logo.anchor.set(0.5, 0.5);
@@ -151,21 +189,6 @@ export default class Stage {
 
         this._logo.y = -config.config.frameHeight * 1.5 - config.config.gameBoardGap * 2 - 20;
         this._gameContainer.addChild(this._logo);
-    }
-
-    /**
-     * Stops ticker on document blur, and starts it on focus
-     */
-    private _handleVisibilityChange() {
-        gameService.subscribe((state) => {
-            if (state.event.type === 'BLUR') {
-                // todo blur handler
-            }
-
-            if (state.event.type === 'FOCUS') {
-                // todo focus handler
-            }
-        });
     }
 
     /**
@@ -179,41 +202,31 @@ export default class Stage {
     }
 
     /**
-     * Creates announcement component
+     * Create highscores container
      */
-    private _createAnnouncement() {
-        this._announcement = new Announcement();
-        this._announcement.x = 0;
-        this._announcement.y = -300;
-
+    private _createHighScores() {
         this._highscores = new Highscores();
-        this._highscores.y = this._announcement.height - 120;
+        this._highscores.position.set(0, 0);
+        this._highscores.visible = false;
+        this._app.stage.addChild(this._highscores);
+    }
 
-        gameService.subscribe((state) => {
-            if (state.event.type === 'GAME_OVER') {
-                let start: number;
-                const duration = 1500;
-                const showGameOver = (timestamp) => {
-                    if (!start) start = timestamp;
-                    const cubicAnimatedValue = easeInOutCubic((timestamp - start) / duration);
+    /**
+     * Create credits container
+     */
+    private _createCredits() {
+        this._credits = new Credits();
+        this._credits.position.set(0, 0);
+        this._app.stage.addChild(this._credits);
+    }
 
-                    this._gameContainer.alpha = 1 - cubicAnimatedValue;
-                    this._announcement.scale.set(cubicAnimatedValue, cubicAnimatedValue);
-                    this._announcement.alpha = cubicAnimatedValue;
-                    this._highscores.alpha = cubicAnimatedValue;
-
-                    if (cubicAnimatedValue >= 1) return;
-                    requestAnimationFrame(showGameOver);
-                };
-
-                requestAnimationFrame(showGameOver);
-                this._announcement.scale.set(0.35, 0.35);
-                this._announcement.visible = true;
-            }
-        });
-
-        this._app.stage.addChild(this._announcement);
-        this._announcement.addChild(this._highscores);
+    /**
+     * Create settings container
+     */
+    private _createSettings() {
+        this._settings = new Settings();
+        this._settings.position.set(0, 0);
+        this._app.stage.addChild(this._settings);
     }
 
     /**
@@ -253,6 +266,136 @@ export default class Stage {
         this._timer.y = 0;
 
         this._gameContainer.addChild(this._timer);
+    }
+
+    /**
+     * Subscribe xstate events — screens driven by state.value
+     */
+    private _subscribeEvents() {
+        const subscription = gameService.subscribe((state) => {
+            if (state.matches('game_over') && state.event.type === 'GAME_OVER') {
+                this._gameOverHandler();
+            }
+
+            this._syncScreens(state);
+        });
+        this._unsubscribe = () => subscription.unsubscribe();
+    }
+
+    private _syncScreens(state) {
+        if (!this._mainMenu) {
+            return;
+        }
+
+        if (state.matches('main_screen')) {
+            if (state.history?.value === 'game_over') {
+                this._resetHandler();
+            }
+
+            this._setScreenVisibility({ menu: true });
+            return;
+        }
+
+        if (state.matches('high_scores')) {
+            this._setScreenVisibility({ highscores: true });
+            return;
+        }
+
+        if (state.matches('credits')) {
+            this._setScreenVisibility({ credits: true });
+            return;
+        }
+
+        if (state.matches('settings')) {
+            this._setScreenVisibility({ settings: true });
+            return;
+        }
+
+        if (state.matches('game_over')) {
+            return;
+        }
+
+        this._setScreenVisibility({ game: true });
+    }
+
+    private _setScreenVisibility(flags: {
+        menu?: boolean;
+        game?: boolean;
+        highscores?: boolean;
+        credits?: boolean;
+        settings?: boolean;
+    }) {
+        if (this._mainMenu) this._mainMenu.visible = !!flags.menu;
+        if (this._gameContainer) {
+            this._gameContainer.visible = !!flags.game;
+            if (flags.game) {
+                this._gameContainer.alpha = 1;
+            }
+        }
+        if (this._highscores) {
+            this._highscores.visible = !!flags.highscores;
+            if (flags.highscores) {
+                this._highscores.alpha = 1;
+            }
+        }
+        if (this._credits) this._credits.visible = !!flags.credits;
+        if (this._settings) this._settings.visible = !!flags.settings;
+    }
+
+    /**
+     * destroy everything after game and recreate for next session
+     */
+    private _resetHandler() {
+        if (this._gameOverRafId !== null) {
+            cancelAnimationFrame(this._gameOverRafId);
+            this._gameOverRafId = null;
+        }
+
+        if (this._gameContainer) {
+            this._gameContainer.destroy({ children: true });
+            this._gameContainer = null;
+        }
+
+        this._createGameElements();
+    }
+
+    /**
+     * Fade out the board and show highscores only
+     */
+    private _gameOverHandler() {
+        if (this._gameOverRafId !== null) {
+            cancelAnimationFrame(this._gameOverRafId);
+            this._gameOverRafId = null;
+        }
+
+        let start: number;
+        const duration = 1200;
+        const showGameOver = (timestamp) => {
+            if (!this._gameContainer || !this._highscores) {
+                return;
+            }
+
+            if (!start) start = timestamp;
+            const cubicAnimatedValue = easeInOutCubic(Math.min(1, (timestamp - start) / duration));
+
+            this._gameContainer.alpha = 1 - cubicAnimatedValue;
+            this._highscores.alpha = cubicAnimatedValue;
+
+            if (cubicAnimatedValue >= 1) {
+                this._gameContainer.visible = false;
+                this._gameOverRafId = null;
+                return;
+            }
+            this._gameOverRafId = requestAnimationFrame(showGameOver);
+        };
+
+        this._highscores.alpha = 0;
+        this._highscores.visible = true;
+        if (this._mainMenu) this._mainMenu.visible = false;
+        if (this._credits) this._credits.visible = false;
+        if (this._settings) this._settings.visible = false;
+
+        this._gameOverRafId = requestAnimationFrame(showGameOver);
     }
 
     set resources(resources) {

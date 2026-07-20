@@ -71,14 +71,19 @@ export default class SideBoard extends PIXI.Container {
     private _currentMatrix: BoardSingleSide;
 
     /**
-     * width
+     * Unsubscribe from game service
      */
-    private _w: number;
+    private _unsubscribe: () => void;
 
     /**
-     * height
+     * Pending completion animation timeouts
      */
-    private _h: number;
+    private _animationTimeouts: ReturnType<typeof setTimeout>[] = [];
+
+    /**
+     * Pending completion animation frames
+     */
+    private _animationRafIds: number[] = [];
 
     /**
      * Constructor of a side board component
@@ -111,7 +116,7 @@ export default class SideBoard extends PIXI.Container {
      * Subscribe to the context and listens for changes in state
      */
     private _onBoardRefresh() {
-        gameService.subscribe((state) => {
+        const subscription = gameService.subscribe((state) => {
             if (state.event.type === 'CHOICE' && state.event.value === this._side) {
                 this._createCurrentPieceMatrix(state.context.board);
             }
@@ -128,6 +133,7 @@ export default class SideBoard extends PIXI.Container {
                 this._createPieceForMatrix(state.context.piece);
             }
         });
+        this._unsubscribe = () => subscription.unsubscribe();
     }
 
     /**
@@ -170,8 +176,14 @@ export default class SideBoard extends PIXI.Container {
         const isFullMatrix = Object.entries(this._currentMatrix).length === 4;
 
         if (isFullMatrix) {
-            this._piecesContainer.destroy();
+            this._cancelCompletionAnimation();
+            this._piecesContainer.destroy({ children: true });
             this._createPiecesContainer();
+            this._currentMatrix = {};
+            this._lt = undefined;
+            this._lb = undefined;
+            this._rt = undefined;
+            this._rb = undefined;
         }
     }
 
@@ -190,20 +202,48 @@ export default class SideBoard extends PIXI.Container {
         return this[`_${part}Position`];
     }
 
+    private _cancelCompletionAnimation() {
+        this._animationTimeouts.forEach((id) => clearTimeout(id));
+        this._animationTimeouts = [];
+        this._animationRafIds.forEach((id) => cancelAnimationFrame(id));
+        this._animationRafIds = [];
+    }
+
     /**
      * Animate completed octi
      */
     private animateCompletedOcti() {
+        this._cancelCompletionAnimation();
+
         for (let i = 0; i < this._piecesContainer.children.length; i += 1) {
+            const child = this._piecesContainer.children[i];
+
             const completeOcti = () => {
-                this._piecesContainer.children[i].alpha -= 0.08;
+                if (this.destroyed || !child || child.destroyed || !this._piecesContainer?.children[i]) {
+                    return;
+                }
 
-                if (this._piecesContainer.children[i].alpha <= 0) return;
+                child.alpha -= 0.08;
 
-                requestAnimationFrame(completeOcti);
+                if (child.alpha <= 0) {
+                    return;
+                }
+
+                const rafId = requestAnimationFrame(completeOcti);
+                this._animationRafIds.push(rafId);
             };
 
-            setTimeout(() => requestAnimationFrame(completeOcti), 1000);
+            const timeoutId = setTimeout(() => {
+                const rafId = requestAnimationFrame(completeOcti);
+                this._animationRafIds.push(rafId);
+            }, 1000);
+            this._animationTimeouts.push(timeoutId);
         }
+    }
+
+    destroy(options?: boolean | PIXI.IDestroyOptions) {
+        this._unsubscribe?.();
+        this._cancelCompletionAnimation();
+        super.destroy(options);
     }
 }

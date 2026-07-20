@@ -30,6 +30,8 @@ export interface Board {
     bottom: BoardSingleSide;
 }
 
+export type AnnounceOutcome = 'win' | 'lose' | null;
+
 export interface GameContext {
     board: Board;
     piece: {
@@ -40,12 +42,14 @@ export interface GameContext {
     player: {
         score: number;
         lives: number;
-        timeoutID: Timer;
+        timeoutID: Timer | null;
         timeAcceleration: number;
     };
     settings: {
-        controllsEnabled: boolean;
+        controlsEnabled: boolean;
+        musicEnabled: boolean;
     };
+    announceOutcome: AnnounceOutcome;
 }
 
 export interface GameState {
@@ -60,8 +64,9 @@ export interface GameState {
         lose: object;
         add_score: object;
         high_scores: object;
+        credits: object;
+        settings: object;
         game_over: object;
-        reset: object;
     };
 }
 
@@ -78,4 +83,8 @@ export type GameEvent =
     | { type: 'GAME_OVER'; score: number }
     | { type: 'BLUR' }
     | { type: 'FOCUS' }
-    | { type: 'RESET' };
+    | { type: 'MUTE' }
+    | { type: 'HIGH_SCORES' }
+    | { type: 'CREDITS' }
+    | { type: 'SETTINGS' }
+    | { type: 'MAIN_MENU' };

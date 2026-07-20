@@ -23,6 +23,21 @@ export default class Timer extends PIXI.Container {
     private _timerSprite: PIXI.Sprite;
 
     /**
+     * Unsubscribe from game service
+     */
+    private _unsubscribe: () => void;
+
+    /**
+     * Active progress animation frame
+     */
+    private _rafId: number | null = null;
+
+    /**
+     * Progress snapshot used when pausing on blur
+     */
+    private _pausedProgressRatio: number | null = null;
+
+    /**
      * Constructor of a component
      */
     constructor() {
@@ -49,8 +64,6 @@ export default class Timer extends PIXI.Container {
         this._timerSprite = new PIXI.Sprite(PIXI.Assets.cache.get('timer'));
         this._timerSprite.width = config.config.timerWidth;
         this._timerSprite.height = config.config.timerHeight;
-
-        // this._timerSprite.blendMode = PIXI.BLEND_MODES.LIGHTEN;
 
         this._timerSprite.anchor.set(0.5, 0.5);
         this._timerSprite.y =
@@ -80,8 +93,6 @@ export default class Timer extends PIXI.Container {
 
         this._timerContainer.x =
             config.config.frameWidth + config.config.gameBoardGap - this._timerContainer.width / 2 + 30;
-
-        // this._createShadow();
     }
 
     /**
@@ -98,34 +109,77 @@ export default class Timer extends PIXI.Container {
         this._timerContainer.addChild(this._timerProgressBar);
     }
 
+    private _cancelProgressAnimation() {
+        if (this._rafId !== null) {
+            cancelAnimationFrame(this._rafId);
+            this._rafId = null;
+        }
+    }
+
+    private _startProgressAnimation(durationMs: number, fromFullWidth = true) {
+        this._cancelProgressAnimation();
+
+        if (!fromFullWidth && this._pausedProgressRatio !== null) {
+            this._timerProgressBar.width = this._timerContainer.width * this._pausedProgressRatio;
+        } else {
+            this._timerProgressBar.width = this._timerContainer.width;
+        }
+
+        const startWidth = this._timerProgressBar.width;
+        const fullWidth = this._timerContainer.width;
+        const remainingRatio = startWidth / fullWidth;
+        const duration = (durationMs / 100) * remainingRatio;
+        let start: number;
+
+        const decreaseTime = (timestamp: number) => {
+            if (this.destroyed) {
+                return;
+            }
+
+            if (!start) {
+                start = timestamp;
+            }
+
+            this._timerProgressBar.width = startWidth * (1 - (timestamp - start) / (duration * 100));
+
+            if (this._timerProgressBar.width <= 0) {
+                this._rafId = null;
+                return;
+            }
+            this._rafId = requestAnimationFrame(decreaseTime);
+        };
+
+        this._rafId = requestAnimationFrame(decreaseTime);
+        this._pausedProgressRatio = null;
+    }
+
     /**
      * Subscribe for the state, listen to changes and add animation
      * that will show the player how much time one has left
      */
     private _onTimeChange() {
-        gameService.subscribe((state) => {
+        const subscription = gameService.subscribe((state) => {
             this._handleAnnouncement(state);
-            if (state.event.type === 'START' || state.event.type === 'CONTINUE') {
+
+            if (state.event.type === 'BLUR') {
+                if (this._timerContainer.width > 0) {
+                    this._pausedProgressRatio = this._timerProgressBar.width / this._timerContainer.width;
+                }
+                this._cancelProgressAnimation();
+                return;
+            }
+
+            if (state.event.type === 'FOCUS' && state.matches('idle') && state.context.player.timeoutID) {
+                this._startProgressAnimation(state.context.player.timeoutID.getTimeLeft(), false);
+                return;
+            }
+
+            if (state.matches('idle') && (state.event.type === 'START' || state.event.type === 'CONTINUE')) {
                 if (!state.context.player.timeoutID) return;
-                let start: number;
-                const duration = state.context.player.timeoutID.getTimeLeft() / 100;
-
-                const decreaseTime = (timestamp: number) => {
-                    if (!start) {
-                        start = timestamp;
-                    }
-
-                    this._timerProgressBar.width =
-                        (this._timerContainer.width * (100 - (timestamp - start) / duration)) / 100;
-
-                    if (this._timerProgressBar.width <= 0) return;
-                    requestAnimationFrame(decreaseTime);
-                };
-
-                this._timerProgressBar.width = this._timerContainer.width;
-                requestAnimationFrame(decreaseTime);
+                this._startProgressAnimation(state.context.player.timeoutID.getTimeLeft(), true);
             }
         });
+        this._unsubscribe = () => subscription.unsubscribe();
     }
 
     /**
@@ -133,15 +187,21 @@ export default class Timer extends PIXI.Container {
      * @param state current game state
      */
     private _handleAnnouncement(state) {
-        if (state.context.player.lives < 0) {
+        if (state.context.player.lives <= 0) {
             this._timerProgressBar.visible = false;
         }
 
-        if (state.value !== 'announce' && state.context.player.lives >= 0) {
+        if (state.value !== 'announce' && state.context.player.lives > 0) {
             this._timerProgressBar.visible = true;
             return;
         }
 
         this._timerProgressBar.visible = false;
+    }
+
+    destroy(options?: boolean | PIXI.IDestroyOptions) {
+        this._unsubscribe?.();
+        this._cancelProgressAnimation();
+        super.destroy(options);
     }
 }

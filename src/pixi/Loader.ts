@@ -35,6 +35,8 @@ export default class Loader {
             'silver-medal': './images/webp/silver-medal.webp',
             'gold-medal': './images/webp/gold-medal.webp',
             'button-long': './images/webp/button-long.webp',
+            switch: './images/switch.png',
+            'rainbow-octi': './images/rainbowOcti-2.png',
         });
 
         PIXI.Assets.load({

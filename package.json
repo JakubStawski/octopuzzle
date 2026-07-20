@@ -19,6 +19,9 @@
     ],
     "author": "Jakub Stawski",
     "license": "ISC",
+    "engines": {
+        "node": ">=18 <24"
+    },
     "devDependencies": {
         "@babel/cli": "^7.19.3",
         "@babel/core": "^7.19.3",

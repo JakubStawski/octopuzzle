@@ -1,7 +1,6 @@
 import { gameService } from './state/stateMachine';
 import Stage from './pixi/Stage';
 import { setKeyBindings, addVisibilityChangeListener } from './engine/utils';
-import { gameStartedSound } from './engine/game';
 import SoundMediator from './engine/SoundMediator';
 
 const soundMediator = new SoundMediator();
@@ -11,10 +10,9 @@ const startGame = () => {
     const Octopuses = new Stage();
     //
     gameService.start();
-    window.addEventListener('assetsLoaded', () => {
-        gameService.send({ type: 'START' });
-        window.dispatchEvent(gameStartedSound);
-    });
+    // window.addEventListener('assetsLoaded', () => {
+    //     gameService.send({ type: 'START' });
+    // });
 };
 
 // Setting the stage up

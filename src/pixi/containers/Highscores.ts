@@ -1,5 +1,4 @@
 import * as PIXI from 'pixi.js';
-import { clickSound } from '../../engine/game';
 import { gameService } from '../../state/stateMachine';
 import { IHighscoresBoard } from '../types';
 import config from '../config.json';
@@ -30,16 +29,21 @@ export default class Highscores extends PIXI.Container {
     private _highscoresHeader: PIXI.Container;
 
     /**
-     * button instance
+     * main menu button instance
      */
-    private _playAgainButton: PIXI.Container;
+    private _mainMenuButton: PIXI.Container;
+
+    /**
+     * Unsubscribe from game service
+     */
+    private _unsubscribe: () => void;
 
     /**
      * Creator for CreditsCounter
      * @param name container name
      * @param label the component title
      */
-    constructor(button: PIXI.Container) {
+    constructor() {
         super();
         this.name = 'Highscores_Board';
 
@@ -51,27 +55,44 @@ export default class Highscores extends PIXI.Container {
      */
     private _init() {
         this._createHighscoresBackground();
+        this._createTitle();
         this._createHighcoresContainer();
 
-        this._listenToGameOver();
+        this._subscribeEvents();
         this._createTableHeader();
-        this._createPlayAgainButton();
-        this._addButton();
+
+        this._createMainMenuButton();
+        this._addButtons();
     }
 
-    private _createPlayAgainButton() {
-        this._playAgainButton = new Button(() => {
-            gameService.send({ type: 'CONTINUE' });
-            window.dispatchEvent(clickSound);
-        }, 'Play again');
-        this._playAgainButton.x = this.width / 2 - this._playAgainButton.width - 80;
-        this._playAgainButton.y = this.height / 2 - this._playAgainButton.height - 80;
+    private _createTitle() {
+        const textStyle = new PIXI.TextStyle({
+            fontFamily: 'Playground',
+            lineJoin: 'round',
+            fontSize: 100,
+            fill: '0xffffff',
+            stroke: '0x000000',
+            strokeThickness: 16,
+        });
+
+        const title = new PIXI.Text('Highscores', textStyle);
+        title.anchor.set(0.5, 1);
+        title.y = -this._background.height / 2 + 55;
+        this.addChild(title);
+    }
+
+    private _createMainMenuButton() {
+        this._mainMenuButton = new Button(() => {
+            gameService.send({ type: 'MAIN_MENU' });
+        }, 'Main Menu');
+        this._mainMenuButton.x = this.width / 2 - this._mainMenuButton.width - 80;
+        this._mainMenuButton.y = this.height / 2 - this._mainMenuButton.height - 80;
     }
 
     private _createTableHeader() {
         this._highscoresHeader = new PIXI.Container();
         this._highscoresHeader.x = -this.width / 2 + 80;
-        this._highscoresHeader.y = -this.height / 2 + 60;
+        this._highscoresHeader.y = -this.height / 2 + 120;
 
         const textStyle = new PIXI.TextStyle({
             fontFamily: 'Playground',
@@ -113,13 +134,6 @@ export default class Highscores extends PIXI.Container {
             strokeThickness: 5,
         });
 
-        // const medals = ['gold', 'silver', 'bronze'];
-
-        // const medal = new PIXI.Sprite(PIXI.Assets.cache.get(`${medals[index]}-medal`));
-        // medal.anchor.set(0, 0.5);
-        // medal.y = config.config.highscoresRecordHeight / 2;
-        // recordContainer.addChild(medal);
-
         const position = new PIXI.Text(`${index + 1}.`, textStyle);
         position.x = 0;
         recordContainer.addChild(position);
@@ -130,7 +144,7 @@ export default class Highscores extends PIXI.Container {
         score.x = config.config.highscoresMedalWidth + 200;
         recordContainer.addChild(score);
 
-        const date = new PIXI.Text(`${element.date + 1}.`, textStyle);
+        const date = new PIXI.Text(`${element.date}`, textStyle);
         date.anchor.set(0, 0.5);
         date.y = config.config.highscoresRecordHeight / 2;
         date.x = config.config.highscoresMedalWidth + 500;
@@ -146,31 +160,40 @@ export default class Highscores extends PIXI.Container {
         this.addChild(this._background);
     }
 
-    private _listenToGameOver() {
-        gameService.subscribe((state) => {
-            if (state.event.type === 'GAME_OVER') {
-                this._highscoresContainer.children.forEach((element) => {
-                    element.destroy();
-                });
+    private _subscribeEvents() {
+        const subscription = gameService.subscribe((state) => {
+            const shouldRefresh =
+                (state.matches('game_over') && state.event.type === 'GAME_OVER') ||
+                (state.matches('high_scores') && state.event.type === 'HIGH_SCORES');
 
-                this._createHighscores();
+            if (shouldRefresh) {
+                this._refreshHighscores();
             }
         });
+        this._unsubscribe = () => subscription.unsubscribe();
+    }
+
+    private _refreshHighscores() {
+        [...this._highscoresContainer.children].forEach((element) => {
+            element.destroy();
+        });
+
+        this._createHighscores();
     }
 
     private _createHighcoresContainer() {
         this._highscoresContainer = new PIXI.Container();
 
         this._highscoresContainer.x = -this.width / 2 + 80;
-        this._highscoresContainer.y = -this.height / 2 + 160;
+        this._highscoresContainer.y = -this.height / 2 + 220;
 
         this.addChild(this._highscoresContainer);
     }
 
     private _createHighscores() {
-        this._highscoresBoard = JSON.parse(localStorage.getItem('highScoreBoard'));
+        this._highscoresBoard = JSON.parse(localStorage.getItem('highScoreBoard') || '[]');
 
-        if (!this._highscoresBoard) return;
+        if (!this._highscoresBoard.length) return;
 
         this._highscoresBoard.forEach((element, index) => {
             const record = this._createRecord(element, index);
@@ -179,8 +202,14 @@ export default class Highscores extends PIXI.Container {
         });
     }
 
-    private _addButton() {
-        if (this._playAgainButton) this.addChild(this._playAgainButton);
-        this._playAgainButton.name = 'Button';
+    private _addButtons() {
+        if (this._mainMenuButton) this.addChild(this._mainMenuButton);
+
+        this._mainMenuButton.name = 'Button_MainMenu';
+    }
+
+    destroy(options?: boolean | PIXI.IDestroyOptions) {
+        this._unsubscribe?.();
+        super.destroy(options);
     }
 }

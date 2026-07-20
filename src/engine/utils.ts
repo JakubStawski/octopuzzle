@@ -2,15 +2,6 @@
 
 import { gameService } from '../state/stateMachine';
 
-export const clickSound = new CustomEvent('clickEvent');
-export const winSound = new CustomEvent('winEvent');
-export const loseSound = new CustomEvent('loseEvent');
-export const completeSound = new CustomEvent('completeEvent');
-// export const completeSound2 = new CustomEvent('complete2');
-// export const completeSound3 = new CustomEvent('complete3');
-export const gameStartedSound = new CustomEvent('gameStartedEvent');
-export const gameOverSound = new CustomEvent('gameOverEvent');
-
 /**
  * Create string that contains 2 letters that represents which corner
  * of the piece is being given
@@ -119,26 +110,30 @@ export const findMostFrequentItem = (array) => {
  */
 export const setKeyBindings = () => {
     document.addEventListener('keyup', (e) => {
-        const { controllsEnabled } = gameService.getSnapshot().context.settings;
+        const snapshot = gameService.getSnapshot();
+        const { controlsEnabled } = snapshot.context.settings;
 
-        if (controllsEnabled) window.dispatchEvent(clickSound);
+        // Arrow choices only during active round
+        if (!controlsEnabled || !snapshot.matches('idle')) {
+            return;
+        }
 
-        if (e.keyCode === 38 && controllsEnabled) {
+        if (e.key === 'ArrowUp') {
             gameService.send({ type: 'CHOICE', value: 'top' });
             return;
         }
 
-        if (e.keyCode === 40 && controllsEnabled) {
+        if (e.key === 'ArrowDown') {
             gameService.send({ type: 'CHOICE', value: 'bottom' });
             return;
         }
 
-        if (e.keyCode === 37 && controllsEnabled) {
+        if (e.key === 'ArrowLeft') {
             gameService.send({ type: 'CHOICE', value: 'left' });
             return;
         }
 
-        if (e.keyCode === 39 && controllsEnabled) {
+        if (e.key === 'ArrowRight') {
             gameService.send({ type: 'CHOICE', value: 'right' });
         }
     });

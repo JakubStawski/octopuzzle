@@ -1,20 +1,14 @@
 import { IHighscoresBoard } from 'src/pixi/types';
 import { gameService } from '../state/stateMachine';
+import { GameContext } from '../state/types';
 import { findMostFrequentItem, randomizePieceColor, randomizeUniquePiecePart, Timer } from './utils';
-
-export const clickSound = new CustomEvent('clickEvent');
-export const winSound = new CustomEvent('winEvent');
-export const loseSound = new CustomEvent('loseEvent');
-export const completeSound = new CustomEvent('completeEvent');
-export const gameStartedSound = new CustomEvent('gameStartedEvent');
-export const gameOverSound = new CustomEvent('gameOverEvent');
 
 /**
  * Function that randomizes a piece with given context
  * and overrides given context with generated piece
  * @param context state of the game
  */
-export const randomizePiece = (context) => {
+export const randomizePiece = (context: GameContext) => {
     context.piece = {
         remainingTime: 5000 * context.player.timeAcceleration,
         part: randomizeUniquePiecePart(context),
@@ -31,10 +25,8 @@ export const randomizePiece = (context) => {
  * @param event event object
  * @returns
  */
-export const checkChoice = (context, event) => {
+export const checkChoice = (context: GameContext, event: { value: string }) => {
     if (context.board[event.value][context.piece.part] !== undefined) {
-        window.dispatchEvent(loseSound);
-
         gameService.send({ type: 'WRONG_CHOICE' });
 
         return;
@@ -49,24 +41,18 @@ export const checkChoice = (context, event) => {
  *
  * @param context state of the game
  */
-export const checkCompletion = (context) => {
-    let array = [];
+export const checkCompletion = (context: GameContext) => {
     let isCompleted = false;
     Object.keys(context.board).forEach((item) => {
         if (Object.keys(context.board[item]).length === 4) {
             isCompleted = true;
-            window.dispatchEvent(winSound);
             gameService.send({ type: 'COMPLETED', value: item });
-            array = Object.keys(context.board[item]).map((el) => context.board[item][el].color);
         }
     });
 
-    if (isCompleted) {
-        const { count } = findMostFrequentItem(array);
-
-        return;
+    if (!isCompleted) {
+        gameService.send({ type: 'CONTINUE' });
     }
-    gameService.send({ type: 'CONTINUE' });
 };
 
 /**
@@ -74,7 +60,7 @@ export const checkCompletion = (context) => {
  * the time player have to make decission
  * @param context state of the game
  */
-export const accelerateTime = (context) => {
+export const accelerateTime = (context: GameContext) => {
     if (context.player.timeAcceleration * 0.8 <= 0.2) {
         return;
     }
@@ -85,7 +71,7 @@ export const accelerateTime = (context) => {
  * Reset the amount of time player have to make decission to default
  * @param context state of the game
  */
-export const resetTimeAcceleration = (context) => {
+export const resetTimeAcceleration = (context: GameContext) => {
     context.player.timeAcceleration = 1;
 };
 
@@ -96,7 +82,7 @@ export const resetTimeAcceleration = (context) => {
  * @param context state of the game
  * @param event event object
  */
-export const calculatePointsAfterCompletion = (context, event) => {
+export const calculatePointsAfterCompletion = (context: GameContext) => {
     let array = [];
     let sideToClear = '';
     Object.keys(context.board).forEach((element) => {
@@ -116,7 +102,7 @@ export const calculatePointsAfterCompletion = (context, event) => {
 
     addScore(context, scoring[count]);
 
-    clearCompletedBoard(sideToClear, context, event);
+    clearCompletedBoard(sideToClear, context);
     gameService.send({ type: 'CONTINUE' });
 };
 
@@ -125,7 +111,7 @@ export const calculatePointsAfterCompletion = (context, event) => {
  * @param context state of the game
  * @param event event object
  */
-export const assignPieceToBoard = (context, event) => {
+export const assignPieceToBoard = (context: GameContext, event: { value: string }) => {
     context.board[event.value][context.piece.part] = { color: context.piece.color };
 };
 
@@ -134,10 +120,10 @@ export const assignPieceToBoard = (context, event) => {
  * @param context game state
  * @returns
  */
-export const loseHp = (context) => {
+export const loseHp = (context: GameContext) => {
     context.player.lives -= 1;
 
-    if (context.player.lives < 0) {
+    if (context.player.lives <= 0) {
         gameService.send({ type: 'GAME_OVER', score: context.player.score });
 
         return;
@@ -146,17 +132,12 @@ export const loseHp = (context) => {
     gameService.send({ type: 'CONTINUE' });
 };
 
-/**
- * Showing highscores
- * @param context state of the game
- */
-export const showHighScores = (context) => {
-    console.table({
-        'Your score': context.player.score,
-    });
-};
+export const setInitialState = (context: GameContext) => {
+    if (context.player.timeoutID) {
+        context.player.timeoutID.stop();
+        context.player.timeoutID = null;
+    }
 
-export const setInitialState = (context) => {
     context.board = {
         top: {},
         left: {},
@@ -175,25 +156,20 @@ export const setInitialState = (context) => {
         timeAcceleration: 1,
     };
     context.settings = {
-        controllsEnabled: true,
+        controlsEnabled: true,
+        musicEnabled: context.settings.musicEnabled,
     };
-};
-
-/**
- * Reset game view
- */
-export const resetGameView = () => {
-    gameService.send({ type: 'RESET' });
+    context.announceOutcome = null;
 };
 
 /**
  * Adding score to the highscores
  * @param context state of the game
  */
-export const addScoreToHighScores = (context) => {
-    const curretHighscores = localStorage.getItem('highScoreBoard') || '[]';
+export const addScoreToHighScores = (context: GameContext) => {
+    const currentHighscores = localStorage.getItem('highScoreBoard') || '[]';
 
-    const highScoreBoard = JSON.parse(curretHighscores);
+    const highScoreBoard: IHighscoresBoard[] = JSON.parse(currentHighscores);
     highScoreBoard.push({
         date: new Date().toLocaleString('pl-PL'),
         score: context.player.score,
@@ -204,7 +180,7 @@ export const addScoreToHighScores = (context) => {
             return -1;
         }
 
-        if (a.score > b.score) {
+        if (a.score < b.score) {
             return 1;
         }
 
@@ -224,7 +200,7 @@ export const addScoreToHighScores = (context) => {
  * @param context game state
  * @param score number which represents points
  */
-export const addScore = (context, score) => {
+export const addScore = (context: GameContext, score: number) => {
     context.player.score += score;
 };
 
@@ -233,7 +209,7 @@ export const addScore = (context, score) => {
  * @param context game state
  * @param event event object
  */
-export const clearCompletedBoard = (sideToClear, context, event) => {
+export const clearCompletedBoard = (sideToClear: string, context: GameContext) => {
     gameService.send({ type: 'CLEAR', value: sideToClear });
     context.board[sideToClear] = {};
 };
@@ -243,9 +219,8 @@ export const clearCompletedBoard = (sideToClear, context, event) => {
  * If no decision is made by the player in given time the TIMEOUT event is sent
  * @param context game state
  */
-export const mountTimeout = (context) => {
+export const mountTimeout = (context: GameContext) => {
     const timeoutID = new Timer(() => {
-        window.dispatchEvent(loseSound);
         gameService.send({ type: 'TIMEOUT' });
     }, context.piece.remainingTime);
 
@@ -257,22 +232,47 @@ export const mountTimeout = (context) => {
  * Unmounts timeout after player makes a choice
  * @param context game state
  */
-export const unmountTimeout = (context) => {
-    context.player.timeoutID.stop();
+export const unmountTimeout = (context: GameContext) => {
+    context.player.timeoutID?.stop();
 };
 
 /**
- * Method that blocks userControlls
- * @param context state of the game
+ * Pause decision timer (e.g. when tab is hidden)
  */
-export const blockUserControlls = (context) => {
-    context.settings.controllsEnabled = false;
+export const pauseTimeout = (context: GameContext) => {
+    if (context.player.timeoutID?.getStateRunning()) {
+        context.player.timeoutID.stop();
+    }
 };
 
 /**
- * Method that unblocks userControlls
+ * Resume decision timer after tab becomes visible again
+ */
+export const resumeTimeout = (context: GameContext) => {
+    if (context.player.timeoutID && !context.player.timeoutID.getStateRunning()) {
+        context.player.timeoutID.start();
+    }
+};
+
+/**
+ * Persist music preference after MUTE assign
+ */
+export const persistMusicSetting = (context: GameContext) => {
+    localStorage.setItem('musicEnabled', context.settings.musicEnabled.toString());
+};
+
+/**
+ * Method that blocks user controls
  * @param context state of the game
  */
-export const unblockUserControlls = (context) => {
-    context.settings.controllsEnabled = true;
+export const blockUserControls = (context: GameContext) => {
+    context.settings.controlsEnabled = false;
+};
+
+/**
+ * Method that unblocks user controls
+ * @param context state of the game
+ */
+export const unblockUserControls = (context: GameContext) => {
+    context.settings.controlsEnabled = true;
 };
