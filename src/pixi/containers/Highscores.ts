@@ -122,16 +122,16 @@ export default class Highscores extends PIXI.Container {
         this.addChild(this._highscoresHeader);
     }
 
-    private _createRecord(element, index) {
+    private _createRecord(element: IHighscoresBoard, index: number, highlight = false) {
         const recordContainer = new PIXI.Container();
 
         const textStyle = new PIXI.TextStyle({
             fontFamily: 'Playground',
             lineJoin: 'round',
             fontSize: 50,
-            fill: '0xecda81',
-            stroke: '0x987800',
-            strokeThickness: 5,
+            fill: highlight ? 0xffffff : 0xecda81,
+            stroke: highlight ? 0x5a4a00 : 0x987800,
+            strokeThickness: highlight ? 6 : 5,
         });
 
         const position = new PIXI.Text(`${index + 1}.`, textStyle);
@@ -195,8 +195,11 @@ export default class Highscores extends PIXI.Container {
 
         if (!this._highscoresBoard.length) return;
 
+        const lastId = Number(localStorage.getItem('lastHighscoreId') || 0);
+
         this._highscoresBoard.forEach((element, index) => {
-            const record = this._createRecord(element, index);
+            const highlight = !!element.id && element.id === lastId;
+            const record = this._createRecord(element, index, highlight);
             record.y = index * config.config.highscoresRecordHeight;
             this._highscoresContainer.addChild(record);
         });

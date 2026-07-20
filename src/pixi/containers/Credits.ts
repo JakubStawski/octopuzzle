@@ -106,6 +106,9 @@ export default class Credits extends PIXI.Container {
             y += text.height + 10;
         };
 
+        addText('Author', sectionStyle);
+        addText('Octo`puzzle by Jakub Stawski', bodyStyle);
+        addGap(18);
         addText('Audio', sectionStyle);
         addText(
             'The following audio assets were obtained from Pixabay and are used under the Pixabay Content License:',

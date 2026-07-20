@@ -170,9 +170,16 @@ export default class Timer extends PIXI.Container {
                 return;
             }
 
-            if (state.matches('idle') && (state.event.type === 'START' || state.event.type === 'CONTINUE')) {
-                if (!state.context.player.timeoutID) return;
-                this._startProgressAnimation(state.context.player.timeoutID.getTimeLeft(), true);
+            if (state.matches('idle') && state.context.player.timeoutID) {
+                const fromCountdown =
+                    typeof state.event.type === 'string' && state.event.type.startsWith('done.');
+                if (
+                    state.event.type === 'START' ||
+                    state.event.type === 'CONTINUE' ||
+                    fromCountdown
+                ) {
+                    this._startProgressAnimation(state.context.player.timeoutID.getTimeLeft(), true);
+                }
             }
         });
         this._unsubscribe = () => subscription.unsubscribe();
@@ -185,14 +192,15 @@ export default class Timer extends PIXI.Container {
     private _handleAnnouncement(state) {
         if (state.context.player.lives <= 0) {
             this._timerProgressBar.visible = false;
-        }
-
-        if (state.value !== 'announce' && state.context.player.lives > 0) {
-            this._timerProgressBar.visible = true;
             return;
         }
 
-        this._timerProgressBar.visible = false;
+        if (state.matches('announce') || state.matches('countdown')) {
+            this._timerProgressBar.visible = false;
+            return;
+        }
+
+        this._timerProgressBar.visible = true;
     }
 
     destroy(options?: boolean | PIXI.IDestroyOptions) {

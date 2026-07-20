@@ -50,6 +50,7 @@ export interface GameContext {
         musicEnabled: boolean;
     };
     announceOutcome: AnnounceOutcome;
+    countdownValue: number;
 }
 
 export interface GameState {
@@ -57,6 +58,7 @@ export interface GameState {
     context: GameContext;
     states: {
         main_screen: object;
+        countdown: object;
         idle: object;
         check_choice: object;
         announce: object;

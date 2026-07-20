@@ -160,6 +160,7 @@ export const setInitialState = (context: GameContext) => {
         musicEnabled: context.settings.musicEnabled,
     };
     context.announceOutcome = null;
+    context.countdownValue = 3;
 };
 
 /**
@@ -170,9 +171,11 @@ export const addScoreToHighScores = (context: GameContext) => {
     const currentHighscores = localStorage.getItem('highScoreBoard') || '[]';
 
     const highScoreBoard: IHighscoresBoard[] = JSON.parse(currentHighscores);
+    const entryId = Date.now();
     highScoreBoard.push({
         date: new Date().toLocaleString('pl-PL'),
         score: context.player.score,
+        id: entryId,
     });
 
     const compareFn = (a: IHighscoresBoard, b: IHighscoresBoard) => {
@@ -193,6 +196,7 @@ export const addScoreToHighScores = (context: GameContext) => {
     }
 
     localStorage.setItem('highScoreBoard', JSON.stringify(highScoreBoard));
+    localStorage.setItem('lastHighscoreId', String(entryId));
 };
 
 /**

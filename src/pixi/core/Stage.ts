@@ -9,6 +9,7 @@ import Loader from './Loader';
 import Lives from '../components/Lives';
 import Score from '../components/Score';
 import Timer from '../components/Timer';
+import Countdown from '../components/Countdown';
 import Highscores from '../containers/Highscores';
 import Credits from '../containers/Credits';
 import Rules from '../containers/Rules';
@@ -90,6 +91,11 @@ export default class Stage {
     private _mainMenu: PIXI.Container | null = null;
 
     /**
+     * Pre-game countdown overlay
+     */
+    private _countdown: Countdown | null = null;
+
+    /**
      * Unsubscribe from game service
      */
     private _unsubscribe: () => void;
@@ -164,6 +170,7 @@ export default class Stage {
 
         this._createMainMenu();
         this._createGameElements();
+        this._createCountdown();
         this._createHighScores();
         this._createCredits();
         this._createRules();
@@ -178,6 +185,21 @@ export default class Stage {
         this._createLives();
         this._createScore();
         this._createTimer();
+    }
+
+    private _createCountdown() {
+        this._countdown = new Countdown();
+        // Align with game board center (game container + board offsets)
+        this._countdown.position.set(0, (this._gameContainer?.y || 0) + (this._gameBoard?.y || 0));
+        this._app.stage.addChild(this._countdown);
+    }
+
+    private _bringCountdownToFront() {
+        if (!this._countdown || this._countdown.destroyed) {
+            return;
+        }
+        this._countdown.position.set(0, (this._gameContainer?.y || 0) + (this._gameBoard?.y || 0));
+        this._app.stage.addChild(this._countdown);
     }
 
     /**
@@ -366,6 +388,12 @@ export default class Stage {
             return;
         }
 
+        if (state.matches('countdown')) {
+            this._setScreenVisibility({ game: true });
+            this._bringCountdownToFront();
+            return;
+        }
+
         if (state.matches('game_over')) {
             return;
         }
@@ -414,6 +442,7 @@ export default class Stage {
         }
 
         this._createGameElements();
+        this._bringCountdownToFront();
     }
 
     /**

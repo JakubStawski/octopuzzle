@@ -32,6 +32,7 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
             musicEnabled: localStorage.getItem('musicEnabled') !== 'false',
         },
         announceOutcome: null,
+        countdownValue: 3,
     },
     on: {
         MUTE: {
@@ -64,6 +65,33 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
                     target: 'announce',
                     actions: assign({ announceOutcome: () => 'lose' as const }),
                 },
+            },
+        },
+        countdown: {
+            entry: [gameEngine.blockUserControls],
+            initial: 'three',
+            states: {
+                three: {
+                    entry: assign({ countdownValue: () => 3 }),
+                    after: { 900: 'two' },
+                },
+                two: {
+                    entry: assign({ countdownValue: () => 2 }),
+                    after: { 900: 'one' },
+                },
+                one: {
+                    entry: assign({ countdownValue: () => 1 }),
+                    after: { 900: 'go' },
+                },
+                go: {
+                    entry: assign({ countdownValue: () => 0 }),
+                    after: { 550: 'finished' },
+                },
+                finished: { type: 'final' },
+            },
+            onDone: {
+                target: 'idle',
+                actions: [gameEngine.unblockUserControls],
             },
         },
         announce: {
@@ -142,7 +170,7 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
             entry: gameEngine.setInitialState,
             on: {
                 START: {
-                    target: 'idle',
+                    target: 'countdown',
                 },
                 HIGH_SCORES: {
                     target: 'high_scores',
