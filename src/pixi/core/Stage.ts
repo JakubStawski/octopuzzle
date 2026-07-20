@@ -56,7 +56,7 @@ export default class Stage {
     /**
      * Logo component
      */
-    private _logo: PIXI.Sprite;
+    private _logo: PIXI.Text;
 
     /**
      * Game and all game components container
@@ -189,7 +189,16 @@ export default class Stage {
      * Creates logo and adds it to the stage
      */
     private _createLogo() {
-        this._logo = new PIXI.Sprite(PIXI.Assets.cache.get('logo'));
+        const textStyle = new PIXI.TextStyle({
+            fontFamily: 'Playground',
+            lineJoin: 'round',
+            fontSize: 90,
+            fill: 0xffffff,
+            stroke: 0x000000,
+            strokeThickness: 12,
+        });
+
+        this._logo = new PIXI.Text('Octo`puzzle', textStyle);
         this._logo.anchor.set(0.5, 0.5);
         this._logo.name = 'Game_Logo';
 

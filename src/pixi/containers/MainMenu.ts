@@ -143,9 +143,9 @@ export default class MainMenu extends PIXI.Container {
             fontFamily: 'Playground',
             lineJoin: 'round',
             fontSize: 200,
-            fill: '0xffffff',
+            fill: 0xffffff,
             strokeThickness: 20,
-            stroke: '0x000000',
+            stroke: 0x000000,
         });
 
         this._logo = new PIXI.Text('Octo`puzzle', textStyle);
