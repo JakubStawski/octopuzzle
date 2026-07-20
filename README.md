@@ -67,7 +67,9 @@ This repo deploys via GitHub Actions (`.github/workflows/deploy-pages.yml`) on e
 1. Push the workflow to `main`.
 2. In the repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 3. After the workflow succeeds, the game is at:
-   `https://jakubstawski.github.io/Octopuses/`
+   `https://jakubstawski.github.io/Octopuzzle/`
+
+> Repo on GitHub must be named **Octopuzzle** (Settings → General → Repository name) so the Pages URL matches.
 
 ## Project structure
 
