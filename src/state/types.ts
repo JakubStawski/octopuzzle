@@ -65,6 +65,7 @@ export interface GameState {
         add_score: object;
         high_scores: object;
         credits: object;
+        rules: object;
         settings: object;
         game_over: object;
     };
@@ -86,5 +87,6 @@ export type GameEvent =
     | { type: 'MUTE' }
     | { type: 'HIGH_SCORES' }
     | { type: 'CREDITS' }
+    | { type: 'RULES' }
     | { type: 'SETTINGS' }
     | { type: 'MAIN_MENU' };

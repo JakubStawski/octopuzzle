@@ -1,37 +1,31 @@
 import * as PIXI from 'pixi.js';
 
 import Button from '../components/Button';
-import Switch from '../components/Switch';
 import { gameService } from '../../state/stateMachine';
 
 /**
- * Settings screen — sound toggle on highscores-style panel
+ * Rules screen — same panel background as credits / highscores
  */
-export default class Settings extends PIXI.Container {
+export default class Rules extends PIXI.Container {
     private _background: PIXI.Sprite;
 
     private _title: PIXI.Text;
 
-    private _soundLabel: PIXI.Text;
-
-    private _soundSwitch: Switch;
+    private _body: PIXI.Text;
 
     private _mainMenuButton: PIXI.Container;
 
-    private _unsubscribe: () => void;
-
     constructor() {
         super();
-        this.name = 'Settings';
+        this.name = 'Rules';
         this._init();
     }
 
     private _init() {
         this._createBackground();
         this._createTitle();
-        this._createSoundRow();
+        this._createBody();
         this._createMainMenuButton();
-        this._subscribeEvents();
         this.visible = false;
     }
 
@@ -46,41 +40,49 @@ export default class Settings extends PIXI.Container {
             fontFamily: 'Playground',
             lineJoin: 'round',
             fontSize: 100,
-            fill: '0xffffff',
-            stroke: '0x000000',
+            fill: 0xffffff,
+            stroke: 0x000000,
             strokeThickness: 16,
         });
 
-        this._title = new PIXI.Text('Settings', textStyle);
+        this._title = new PIXI.Text('Rules', textStyle);
         this._title.anchor.set(0.5, 1);
         this._title.y = -this._background.height / 2 + 55;
         this.addChild(this._title);
     }
 
-    private _createSoundRow() {
-        const row = new PIXI.Container();
-
+    private _createBody() {
         const textStyle = new PIXI.TextStyle({
             fontFamily: 'Playground',
             lineJoin: 'round',
-            fontSize: 56,
-            fill: '0xecda81',
-            strokeThickness: 4,
-            stroke: '0x987800',
+            fontSize: 38,
+            fill: 0xecda81,
+            strokeThickness: 3,
+            stroke: 0x987800,
+            align: 'left',
+            lineHeight: 50,
+            wordWrap: true,
+            wordWrapWidth: this._background.width - 160,
         });
 
-        this._soundLabel = new PIXI.Text('Sound', textStyle);
-        this._soundLabel.anchor.set(0, 0.5);
-        this._soundLabel.x = -220;
+        const rulesText = [
+            'A piece appears in the center.',
+            'Use arrow keys to place it on a side board.',
+            '',
+            'Each board builds one octopus from 4 parts.',
+            'You cannot place a part that is already there.',
+            '',
+            'Complete an octopus to score points.',
+            'More matching colors = higher score!',
+            '',
+            'Wrong move or timeout costs a life.',
+            'The timer gets faster as you progress.',
+        ].join('\n');
 
-        this._soundSwitch = new Switch(gameService.getSnapshot().context.settings.musicEnabled, () => {
-            gameService.send({ type: 'MUTE' });
-        });
-        this._soundSwitch.x = 160;
-
-        row.addChild(this._soundLabel, this._soundSwitch);
-        row.y = -20;
-        this.addChild(row);
+        this._body = new PIXI.Text(rulesText, textStyle);
+        this._body.anchor.set(0.5, 0.5);
+        this._body.y = 10;
+        this.addChild(this._body);
     }
 
     private _createMainMenuButton() {
@@ -90,19 +92,5 @@ export default class Settings extends PIXI.Container {
         this._mainMenuButton.x = this.width / 2 - this._mainMenuButton.width - 80;
         this._mainMenuButton.y = this.height / 2 - this._mainMenuButton.height - 80;
         this.addChild(this._mainMenuButton);
-    }
-
-    private _subscribeEvents() {
-        const subscription = gameService.subscribe((state) => {
-            if (state.event.type === 'MUTE') {
-                this._soundSwitch.setValue(state.context.settings.musicEnabled, true);
-            }
-        });
-        this._unsubscribe = () => subscription.unsubscribe();
-    }
-
-    destroy(options?: boolean | PIXI.IDestroyOptions) {
-        this._unsubscribe?.();
-        super.destroy(options);
     }
 }

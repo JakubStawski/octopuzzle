@@ -40,6 +40,7 @@ export default class Loader {
             'gold-medal': './images/webp/gold-medal.webp',
             'button-long': './images/webp/button-long.webp',
             switch: './images/switch.png',
+            scroll: './images/scroll-track.png',
             'rainbow-octi': './images/rainbowOcti-2.png',
         });
 

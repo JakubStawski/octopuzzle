@@ -14,6 +14,8 @@ A random octopus piece appears in the center. Place it on one of the four side b
 - Wrong placement or running out of time costs a life.
 - After each completed octopus the timer gets a bit tighter.
 
+In-game, open **Rules** from the main menu for the same overview.
+
 ### Controls
 
 | Key | Action |

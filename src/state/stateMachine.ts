@@ -150,12 +150,20 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
                 SETTINGS: {
                     target: 'settings',
                 },
+                RULES: {
+                    target: 'rules',
+                },
                 CREDITS: {
                     target: 'credits',
                 },
             },
         },
         settings: {
+            on: {
+                MAIN_MENU: 'main_screen',
+            },
+        },
+        rules: {
             on: {
                 MAIN_MENU: 'main_screen',
             },

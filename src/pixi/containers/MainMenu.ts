@@ -5,66 +5,60 @@ import Button from '../components/Button';
 import { animateOnTicker, loopOnTicker } from '../utils/animateOnTicker';
 
 export default class MainMenu extends PIXI.Container {
-    /**
-     * play Button
-     */
     private _playButton: PIXI.Container;
 
-    /**
-     * highscores Button
-     */
     private _highscoresButton: PIXI.Container;
 
-    /**
-     * settings Button
-     */
+    private _rulesButton: PIXI.Container;
+
     private _settingsButton: PIXI.Container;
 
-    /**
-     * credits Button
-     */
     private _creditsButton: PIXI.Container;
 
-    /**
-     * logo text, basically game name as pixi text
-     */
     private _logo: PIXI.Text;
 
-    /**
-     * image under logo
-     */
     private _logoSprite: PIXI.Sprite;
 
     private _cancelIdle: (() => void) | null = null;
 
     private _entranceCancels: (() => void)[] = [];
 
-    /**
-     * Constructor of the pixi application and its stage
-     */
     constructor() {
         super();
         this._init();
     }
 
-    /**
-     * Create boards on init
-     */
     private _init() {
         this._createLogo();
         this._createPlayButton();
         this._createHighscoresButton();
+        this._createRulesButton();
         this._createSettingsButton();
         this._createCreditsButton();
-        // Lower the whole menu so logo/buttons sit more comfortably in view
+        this._layoutButtons();
         this.y = 140;
         this._startIdleMotion();
         this._playEntrance();
     }
 
-    /**
-     * Soft bob for octopus + gentle logo pulse
-     */
+    private _layoutButtons() {
+        const gap = this._playButton.height + 24;
+        const offsetY = 50;
+        const buttons = [
+            this._playButton,
+            this._highscoresButton,
+            this._rulesButton,
+            this._settingsButton,
+            this._creditsButton,
+        ];
+
+        buttons.forEach((btn, index) => {
+            const button = btn;
+            button.x = -button.width / 2;
+            button.y = (index - 2) * gap + offsetY;
+        });
+    }
+
     private _startIdleMotion() {
         const octiBaseY = this._logoSprite.y;
         const logoBaseScale = 1;
@@ -85,18 +79,21 @@ export default class MainMenu extends PIXI.Container {
         });
     }
 
-    /**
-     * Staggered button fade/slide-in
-     */
     private _playEntrance() {
-        const buttons = [this._playButton, this._highscoresButton, this._settingsButton, this._creditsButton];
+        const buttons = [
+            this._playButton,
+            this._highscoresButton,
+            this._rulesButton,
+            this._settingsButton,
+            this._creditsButton,
+        ];
         buttons.forEach((btn, index) => {
             const button = btn;
             button.alpha = 0;
             const targetY = button.y;
             button.y = targetY + 30;
 
-            let elapsed = -index * 90;
+            let elapsed = -index * 80;
             const duration = 420;
 
             const cancel = animateOnTicker((deltaMS) => {
@@ -121,23 +118,13 @@ export default class MainMenu extends PIXI.Container {
         });
     }
 
-    /**
-     * create play button
-     */
     private _createPlayButton() {
         this._playButton = new Button(() => {
             gameService.send({ type: 'START' });
         }, 'Let`s play!');
-
-        this._playButton.y = -(this._playButton.height + 40) * 1.5 + 80;
-        this._playButton.x = -this._playButton.width / 2;
-
         this.addChild(this._playButton);
     }
 
-    /**
-     * creates logo
-     */
     private _createLogo() {
         const textStyle = new PIXI.TextStyle({
             fontFamily: 'Playground',
@@ -150,15 +137,11 @@ export default class MainMenu extends PIXI.Container {
 
         this._logo = new PIXI.Text('Octo`puzzle', textStyle);
         this._logo.anchor.set(0.5, 0.5);
-
         this._logo.y = -400;
         this._createLogoSprite();
         this.addChild(this._logo);
     }
 
-    /**
-     * create rainbow octopus sprite
-     */
     private _createLogoSprite() {
         this._logoSprite = new PIXI.Sprite(PIXI.Assets.cache.get('rainbow-octi'));
         this._logoSprite.anchor.set(0.5, 0.5);
@@ -166,45 +149,31 @@ export default class MainMenu extends PIXI.Container {
         this.addChild(this._logoSprite);
     }
 
-    /**
-     * create highscores button
-     */
     private _createHighscoresButton() {
         this._highscoresButton = new Button(() => {
             gameService.send({ type: 'HIGH_SCORES' });
         }, 'Highscores');
-
-        this._highscoresButton.y = -(this._highscoresButton.height + 40) * 0.5 + 80;
-        this._highscoresButton.x = -this._highscoresButton.width / 2;
-
         this.addChild(this._highscoresButton);
     }
 
-    /**
-     * create settings button
-     */
+    private _createRulesButton() {
+        this._rulesButton = new Button(() => {
+            gameService.send({ type: 'RULES' });
+        }, 'Rules');
+        this.addChild(this._rulesButton);
+    }
+
     private _createSettingsButton() {
         this._settingsButton = new Button(() => {
             gameService.send({ type: 'SETTINGS' });
         }, 'Settings');
-
-        this._settingsButton.y = (this._settingsButton.height + 40) * 0.5 + 80;
-        this._settingsButton.x = -this._settingsButton.width / 2;
-
         this.addChild(this._settingsButton);
     }
 
-    /**
-     * create credits button
-     */
     private _createCreditsButton() {
         this._creditsButton = new Button(() => {
             gameService.send({ type: 'CREDITS' });
         }, 'Credits');
-
-        this._creditsButton.y = (this._creditsButton.height + 40) * 1.5 + 80;
-        this._creditsButton.x = -this._creditsButton.width / 2;
-
         this.addChild(this._creditsButton);
     }
 

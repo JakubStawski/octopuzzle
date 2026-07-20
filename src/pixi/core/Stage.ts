@@ -11,6 +11,7 @@ import Score from '../components/Score';
 import Timer from '../components/Timer';
 import Highscores from '../containers/Highscores';
 import Credits from '../containers/Credits';
+import Rules from '../containers/Rules';
 import Settings from '../containers/Settings';
 import MainMenu from '../containers/MainMenu';
 import { animateOnTicker, loopOnTicker } from '../utils/animateOnTicker';
@@ -72,6 +73,11 @@ export default class Stage {
      * Credits screen
      */
     private _credits: PIXI.Container | null = null;
+
+    /**
+     * Rules screen
+     */
+    private _rules: PIXI.Container | null = null;
 
     /**
      * Settings screen
@@ -160,6 +166,7 @@ export default class Stage {
         this._createGameElements();
         this._createHighScores();
         this._createCredits();
+        this._createRules();
         this._createSettings();
         this._syncScreens(gameService.getSnapshot());
     }
@@ -255,6 +262,15 @@ export default class Stage {
     }
 
     /**
+     * Create rules container
+     */
+    private _createRules() {
+        this._rules = new Rules();
+        this._rules.position.set(0, 0);
+        this._app.stage.addChild(this._rules);
+    }
+
+    /**
      * Create settings container
      */
     private _createSettings() {
@@ -340,6 +356,11 @@ export default class Stage {
             return;
         }
 
+        if (state.matches('rules')) {
+            this._setScreenVisibility({ rules: true });
+            return;
+        }
+
         if (state.matches('settings')) {
             this._setScreenVisibility({ settings: true });
             return;
@@ -357,6 +378,7 @@ export default class Stage {
         game?: boolean;
         highscores?: boolean;
         credits?: boolean;
+        rules?: boolean;
         settings?: boolean;
     }) {
         if (this._mainMenu) this._mainMenu.visible = !!flags.menu;
@@ -373,6 +395,7 @@ export default class Stage {
             }
         }
         if (this._credits) this._credits.visible = !!flags.credits;
+        if (this._rules) this._rules.visible = !!flags.rules;
         if (this._settings) this._settings.visible = !!flags.settings;
     }
 
@@ -407,6 +430,7 @@ export default class Stage {
         this._highscores.visible = true;
         if (this._mainMenu) this._mainMenu.visible = false;
         if (this._credits) this._credits.visible = false;
+        if (this._rules) this._rules.visible = false;
         if (this._settings) this._settings.visible = false;
 
         this._cancelGameOverAnim = animateOnTicker((deltaMS) => {
