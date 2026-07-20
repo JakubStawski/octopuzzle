@@ -5,6 +5,7 @@ import Piece from './Piece';
 import { gameService } from '../../state/stateMachine';
 
 import config from '../config.json';
+import { loopOnTicker, playPopIn } from '../utils/animateOnTicker';
 
 /**
  * Create board that represents current piece
@@ -56,6 +57,10 @@ export default class CenterBoard extends PIXI.Container {
      */
     private _unsubscribe: () => void;
 
+    private _cancelIdle: (() => void) | null = null;
+
+    private _cancelPop: (() => void) | null = null;
+
     /**
      * Constructor of a center board component
      * @param width number
@@ -79,12 +84,20 @@ export default class CenterBoard extends PIXI.Container {
         this._onPieceRefresh();
     }
 
+    private _stopPieceMotion() {
+        this._cancelIdle?.();
+        this._cancelIdle = null;
+        this._cancelPop?.();
+        this._cancelPop = null;
+    }
+
     /**
      * Subscribe to the context and listens for changes to the pieces state
      */
     private _onPieceRefresh() {
         const subscription = gameService.subscribe((state) => {
             if (state.matches('announce') || state.matches('game_over') || state.context.player.lives <= 0) {
+                this._stopPieceMotion();
                 if (this._currentPiece && !this._currentPiece.destroyed) {
                     this._currentPiece.destroy();
                     this._currentPiece = undefined;
@@ -107,6 +120,8 @@ export default class CenterBoard extends PIXI.Container {
      * @param color number [0 - 3] that represents the color of a piece
      */
     private _createCurrentPiece(part, color) {
+        this._stopPieceMotion();
+
         if (this._currentPiece !== undefined && !this._currentPiece.destroyed) {
             this._currentPiece.destroy();
         }
@@ -117,6 +132,24 @@ export default class CenterBoard extends PIXI.Container {
         this._currentPiece.y = position[1];
 
         this._boardSquare.addChild(this._currentPiece);
+        this._cancelPop = playPopIn(this._currentPiece, {
+            onComplete: () => this._startPieceIdle(position[1]),
+        });
+    }
+
+    private _startPieceIdle(baseY: number) {
+        let elapsed = 0;
+        this._cancelIdle = loopOnTicker((deltaMS) => {
+            if (this.destroyed || !this._currentPiece || this._currentPiece.destroyed) {
+                return;
+            }
+
+            elapsed += deltaMS;
+            const t = elapsed / 1000;
+            this._currentPiece.y = baseY + Math.sin(t * 2.4) * 6;
+            const pulse = 1 + Math.sin(t * 2.0) * 0.04;
+            this._currentPiece.scale.set(pulse);
+        });
     }
 
     /**
@@ -135,6 +168,7 @@ export default class CenterBoard extends PIXI.Container {
     }
 
     destroy(options?: boolean | PIXI.IDestroyOptions) {
+        this._stopPieceMotion();
         this._unsubscribe?.();
         super.destroy(options);
     }

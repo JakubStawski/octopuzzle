@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js';
 
 import { gameService } from '../../state/stateMachine';
 import Button from '../components/Button';
+import { animateOnTicker, loopOnTicker } from '../utils/animateOnTicker';
 
 export default class MainMenu extends PIXI.Container {
     /**
@@ -34,6 +35,10 @@ export default class MainMenu extends PIXI.Container {
      */
     private _logoSprite: PIXI.Sprite;
 
+    private _cancelIdle: (() => void) | null = null;
+
+    private _entranceCancels: (() => void)[] = [];
+
     /**
      * Constructor of the pixi application and its stage
      */
@@ -53,6 +58,67 @@ export default class MainMenu extends PIXI.Container {
         this._createCreditsButton();
         // Lower the whole menu so logo/buttons sit more comfortably in view
         this.y = 140;
+        this._startIdleMotion();
+        this._playEntrance();
+    }
+
+    /**
+     * Soft bob for octopus + gentle logo pulse
+     */
+    private _startIdleMotion() {
+        const octiBaseY = this._logoSprite.y;
+        const logoBaseScale = 1;
+        let elapsed = 0;
+
+        this._cancelIdle = loopOnTicker((deltaMS) => {
+            if (this.destroyed || !this.visible) {
+                return;
+            }
+
+            elapsed += deltaMS;
+            const t = elapsed / 1000;
+            this._logoSprite.y = octiBaseY + Math.sin(t * 1.6) * 14;
+
+            const pulse = 1 + Math.sin(t * 2.2) * 0.015;
+            this._logo.scale.set(logoBaseScale * pulse);
+            this._logoSprite.scale.set(pulse);
+        });
+    }
+
+    /**
+     * Staggered button fade/slide-in
+     */
+    private _playEntrance() {
+        const buttons = [this._playButton, this._highscoresButton, this._settingsButton, this._creditsButton];
+        buttons.forEach((btn, index) => {
+            const button = btn;
+            button.alpha = 0;
+            const targetY = button.y;
+            button.y = targetY + 30;
+
+            let elapsed = -index * 90;
+            const duration = 420;
+
+            const cancel = animateOnTicker((deltaMS) => {
+                if (this.destroyed) {
+                    return true;
+                }
+
+                elapsed += deltaMS;
+                if (elapsed < 0) {
+                    return false;
+                }
+
+                const t = Math.min(1, elapsed / duration);
+                const eased = 1 - (1 - t) ** 3;
+                button.alpha = eased;
+                button.y = targetY + 30 * (1 - eased);
+
+                return t >= 1;
+            });
+
+            this._entranceCancels.push(cancel);
+        });
     }
 
     /**
@@ -63,7 +129,7 @@ export default class MainMenu extends PIXI.Container {
             gameService.send({ type: 'START' });
         }, 'Let`s play!');
 
-        this._playButton.y = -(this._playButton.height + 40) * 1.5;
+        this._playButton.y = -(this._playButton.height + 40) * 1.5 + 80;
         this._playButton.x = -this._playButton.width / 2;
 
         this.addChild(this._playButton);
@@ -85,7 +151,7 @@ export default class MainMenu extends PIXI.Container {
         this._logo = new PIXI.Text('Octo`puzzle', textStyle);
         this._logo.anchor.set(0.5, 0.5);
 
-        this._logo.y = -320;
+        this._logo.y = -400;
         this._createLogoSprite();
         this.addChild(this._logo);
     }
@@ -96,7 +162,7 @@ export default class MainMenu extends PIXI.Container {
     private _createLogoSprite() {
         this._logoSprite = new PIXI.Sprite(PIXI.Assets.cache.get('rainbow-octi'));
         this._logoSprite.anchor.set(0.5, 0.5);
-        this._logoSprite.y = -this._logoSprite.height + 180;
+        this._logoSprite.y = -this._logoSprite.height + 100;
         this.addChild(this._logoSprite);
     }
 
@@ -108,7 +174,7 @@ export default class MainMenu extends PIXI.Container {
             gameService.send({ type: 'HIGH_SCORES' });
         }, 'Highscores');
 
-        this._highscoresButton.y = -(this._highscoresButton.height + 40) * 0.5;
+        this._highscoresButton.y = -(this._highscoresButton.height + 40) * 0.5 + 80;
         this._highscoresButton.x = -this._highscoresButton.width / 2;
 
         this.addChild(this._highscoresButton);
@@ -122,7 +188,7 @@ export default class MainMenu extends PIXI.Container {
             gameService.send({ type: 'SETTINGS' });
         }, 'Settings');
 
-        this._settingsButton.y = (this._settingsButton.height + 40) * 0.5;
+        this._settingsButton.y = (this._settingsButton.height + 40) * 0.5 + 80;
         this._settingsButton.x = -this._settingsButton.width / 2;
 
         this.addChild(this._settingsButton);
@@ -136,9 +202,17 @@ export default class MainMenu extends PIXI.Container {
             gameService.send({ type: 'CREDITS' });
         }, 'Credits');
 
-        this._creditsButton.y = (this._creditsButton.height + 40) * 1.5;
+        this._creditsButton.y = (this._creditsButton.height + 40) * 1.5 + 80;
         this._creditsButton.x = -this._creditsButton.width / 2;
 
         this.addChild(this._creditsButton);
+    }
+
+    destroy(options?: boolean | PIXI.IDestroyOptions) {
+        this._cancelIdle?.();
+        this._cancelIdle = null;
+        this._entranceCancels.forEach((cancel) => cancel());
+        this._entranceCancels = [];
+        super.destroy(options);
     }
 }

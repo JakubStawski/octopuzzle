@@ -2,6 +2,10 @@ import * as PIXI from 'pixi.js';
 
 export default class Loader {
     constructor() {
+        // Soft edges when sprites are scaled / rotated
+        PIXI.BaseTexture.defaultOptions.scaleMode = PIXI.SCALE_MODES.LINEAR;
+        PIXI.BaseTexture.defaultOptions.mipmap = PIXI.MIPMAP_MODES.ON;
+
         PIXI.Assets.init();
         this._loadAssets();
     }

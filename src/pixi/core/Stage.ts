@@ -13,7 +13,7 @@ import Highscores from '../containers/Highscores';
 import Credits from '../containers/Credits';
 import Settings from '../containers/Settings';
 import MainMenu from '../containers/MainMenu';
-import { animateOnTicker } from '../utils/animateOnTicker';
+import { animateOnTicker, loopOnTicker } from '../utils/animateOnTicker';
 
 export interface IOctisGame extends PIXI.Application {
     resources: object;
@@ -93,6 +93,8 @@ export default class Stage {
      */
     private _cancelGameOverAnim: (() => void) | null = null;
 
+    private _cancelLogoIdle: (() => void) | null = null;
+
     /**
      * Constructor of the pixi application and its stage
      */
@@ -104,10 +106,12 @@ export default class Stage {
             height: Stage.DESIGN_SIZE,
             resolution: Math.min(window.devicePixelRatio || 1, 2),
             autoDensity: true,
+            antialias: true,
             backgroundAlpha: 0,
             sharedTicker: true,
+            roundPixels: false,
         });
-
+        this._app.renderer.roundPixels = false;
         this._resources = new Loader();
 
         globalThis.__PIXI_APP__ = this._app;
@@ -191,6 +195,25 @@ export default class Stage {
 
         this._logo.y = -config.config.frameHeight * 1.5 - config.config.gameBoardGap * 2 - 20;
         this._gameContainer.addChild(this._logo);
+        this._startLogoIdle();
+    }
+
+    private _startLogoIdle() {
+        this._cancelLogoIdle?.();
+        const baseY = this._logo.y;
+        let elapsed = 0;
+
+        this._cancelLogoIdle = loopOnTicker((deltaMS) => {
+            if (this._logo?.destroyed) {
+                return;
+            }
+
+            elapsed += deltaMS;
+            const t = elapsed / 1000;
+            this._logo.y = baseY + Math.sin(t * 1.5) * 8;
+            const pulse = 1 + Math.sin(t * 2.0) * 0.03;
+            this._logo.scale.set(pulse);
+        });
     }
 
     /**
@@ -350,6 +373,8 @@ export default class Stage {
     private _resetHandler() {
         this._cancelGameOverAnim?.();
         this._cancelGameOverAnim = null;
+        this._cancelLogoIdle?.();
+        this._cancelLogoIdle = null;
 
         if (this._gameContainer) {
             this._gameContainer.destroy({ children: true });

@@ -4,7 +4,7 @@ import BoardSquare from './BoardSquare';
 import Piece from './Piece';
 import { gameService } from '../../state/stateMachine';
 import config from '../config.json';
-import { animateOnTicker } from '../utils/animateOnTicker';
+import { animateOnTicker, playPopIn } from '../utils/animateOnTicker';
 
 /**
  * The side board component, that's the place
@@ -131,6 +131,7 @@ export default class SideBoard extends PIXI.Container {
             }
 
             if (state.event.type === 'RIGHT_CHOICE' && state.event.value === this._side) {
+                this._createCurrentPieceMatrix(state.context.board);
                 this._createPieceForMatrix(state.context.piece);
             }
         });
@@ -168,6 +169,7 @@ export default class SideBoard extends PIXI.Container {
         this[`_${piece.part}`].y = position[1];
 
         this._piecesContainer.addChild(this[`_${piece.part}`]);
+        this._animationCancels.push(playPopIn(this[`_${piece.part}`], { duration: 220, fromScale: 0.4 }));
     }
 
     /**
@@ -215,6 +217,14 @@ export default class SideBoard extends PIXI.Container {
      */
     private animateCompletedOcti() {
         this._cancelCompletionAnimation();
+
+        // RIGHT_CHOICE may have just started a pop-in (alpha 0); COMPLETED cancels it
+        // before fade-in — snap every part fully visible so the last piece isn't missing
+        this._piecesContainer.children.forEach((child) => {
+            const piece = child as PIXI.DisplayObject & { scale: PIXI.ObservablePoint };
+            piece.alpha = 1;
+            piece.scale.set(1);
+        });
 
         for (let i = 0; i < this._piecesContainer.children.length; i += 1) {
             const child = this._piecesContainer.children[i];
