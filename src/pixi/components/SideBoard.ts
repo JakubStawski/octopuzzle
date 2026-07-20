@@ -4,6 +4,7 @@ import BoardSquare from './BoardSquare';
 import Piece from './Piece';
 import { gameService } from '../../state/stateMachine';
 import config from '../config.json';
+import { animateOnTicker } from '../utils/animateOnTicker';
 
 /**
  * The side board component, that's the place
@@ -81,9 +82,9 @@ export default class SideBoard extends PIXI.Container {
     private _animationTimeouts: ReturnType<typeof setTimeout>[] = [];
 
     /**
-     * Pending completion animation frames
+     * Cancel functions for active ticker animations
      */
-    private _animationRafIds: number[] = [];
+    private _animationCancels: (() => void)[] = [];
 
     /**
      * Constructor of a side board component
@@ -205,8 +206,8 @@ export default class SideBoard extends PIXI.Container {
     private _cancelCompletionAnimation() {
         this._animationTimeouts.forEach((id) => clearTimeout(id));
         this._animationTimeouts = [];
-        this._animationRafIds.forEach((id) => cancelAnimationFrame(id));
-        this._animationRafIds = [];
+        this._animationCancels.forEach((cancel) => cancel());
+        this._animationCancels = [];
     }
 
     /**
@@ -218,24 +219,17 @@ export default class SideBoard extends PIXI.Container {
         for (let i = 0; i < this._piecesContainer.children.length; i += 1) {
             const child = this._piecesContainer.children[i];
 
-            const completeOcti = () => {
-                if (this.destroyed || !child || child.destroyed || !this._piecesContainer?.children[i]) {
-                    return;
-                }
-
-                child.alpha -= 0.08;
-
-                if (child.alpha <= 0) {
-                    return;
-                }
-
-                const rafId = requestAnimationFrame(completeOcti);
-                this._animationRafIds.push(rafId);
-            };
-
             const timeoutId = setTimeout(() => {
-                const rafId = requestAnimationFrame(completeOcti);
-                this._animationRafIds.push(rafId);
+                const cancel = animateOnTicker(() => {
+                    if (this.destroyed || !child || child.destroyed || !this._piecesContainer?.children[i]) {
+                        return true;
+                    }
+
+                    child.alpha -= 0.08;
+
+                    return child.alpha <= 0;
+                });
+                this._animationCancels.push(cancel);
             }, 1000);
             this._animationTimeouts.push(timeoutId);
         }

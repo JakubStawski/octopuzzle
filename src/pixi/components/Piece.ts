@@ -1,6 +1,5 @@
 import * as PIXI from 'pixi.js';
 import config from '../config.json';
-import { IOctisGame } from '../Stage';
 
 /**
  * Component that displays single piece

@@ -1,5 +1,7 @@
 import * as PIXI from 'pixi.js';
 
+import { animateOnTicker } from '../utils/animateOnTicker';
+
 /**
  * Toggle switch built from the cyan capsule asset + sliding knob
  */
@@ -11,6 +13,8 @@ export default class Switch extends PIXI.Container {
     private _value: boolean;
 
     private _onChange: (value: boolean) => void;
+
+    private _cancelAnim: (() => void) | null = null;
 
     constructor(initialValue: boolean, onChange: (value: boolean) => void) {
         super();
@@ -56,29 +60,34 @@ export default class Switch extends PIXI.Container {
 
         const targetX = this._knobX(this._value);
         if (!animate) {
+            this._cancelAnim?.();
+            this._cancelAnim = null;
             this._knob.x = targetX;
             return;
         }
 
+        this._cancelAnim?.();
         const startX = this._knob.x;
-        const start = performance.now();
         const duration = 140;
+        let elapsed = 0;
 
-        const step = (now: number) => {
+        this._cancelAnim = animateOnTicker((deltaMS) => {
             if (this.destroyed) {
-                return;
+                this._cancelAnim = null;
+                return true;
             }
 
-            const t = Math.min(1, (now - start) / duration);
+            elapsed += deltaMS;
+            const t = Math.min(1, elapsed / duration);
             const eased = t * (2 - t);
             this._knob.x = startX + (targetX - startX) * eased;
 
-            if (t < 1) {
-                requestAnimationFrame(step);
+            if (t >= 1) {
+                this._cancelAnim = null;
+                return true;
             }
-        };
-
-        requestAnimationFrame(step);
+            return false;
+        });
     }
 
     private _createEvents() {
@@ -101,5 +110,11 @@ export default class Switch extends PIXI.Container {
 
     get value() {
         return this._value;
+    }
+
+    destroy(options?: boolean | PIXI.IDestroyOptions) {
+        this._cancelAnim?.();
+        this._cancelAnim = null;
+        super.destroy(options);
     }
 }

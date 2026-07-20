@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js';
 import { gameService } from '../../state/stateMachine';
 
 import config from '../config.json';
+import { animateOnTicker } from '../utils/animateOnTicker';
 
 /**
  * Component that displays players score
@@ -23,9 +24,9 @@ export default class Score extends PIXI.Container {
     private _unsubscribe: () => void;
 
     /**
-     * Active count-up animation frame
+     * Cancel active count-up animation
      */
-    private _rafId: number | null = null;
+    private _cancelAnim: (() => void) | null = null;
 
     /**
      * Constructor of the component
@@ -81,10 +82,8 @@ export default class Score extends PIXI.Container {
     }
 
     private _cancelCountUp() {
-        if (this._rafId !== null) {
-            cancelAnimationFrame(this._rafId);
-            this._rafId = null;
-        }
+        this._cancelAnim?.();
+        this._cancelAnim = null;
     }
 
     /**
@@ -106,27 +105,27 @@ export default class Score extends PIXI.Container {
                 this._cancelCountUp();
 
                 let points = displayed;
-                let start: number;
                 const duration = 1000;
+                let elapsed = 0;
 
-                const countUp = (timestamp: number) => {
+                this._cancelAnim = animateOnTicker((deltaMS) => {
                     if (this.destroyed) {
-                        return;
+                        this._cancelAnim = null;
+                        return true;
                     }
 
-                    if (!start) start = timestamp;
-
-                    const elapsed = (timestamp - start) / duration;
+                    elapsed += deltaMS;
+                    const progress = elapsed / duration;
+                    points += Math.ceil(progress * (target - points));
                     this._scoreText.text = points;
+
                     if (points >= target) {
                         this._scoreText.text = target;
-                        this._rafId = null;
-                        return;
+                        this._cancelAnim = null;
+                        return true;
                     }
-                    points += Math.ceil(elapsed * (target - points));
-                    this._rafId = requestAnimationFrame(countUp);
-                };
-                this._rafId = requestAnimationFrame(countUp);
+                    return false;
+                });
             }
         });
         this._unsubscribe = () => subscription.unsubscribe();

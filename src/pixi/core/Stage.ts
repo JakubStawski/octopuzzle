@@ -1,18 +1,19 @@
 import * as PIXI from 'pixi.js';
-import { gameService } from '../state/stateMachine';
-import GameBoard from './containers/GameBoard';
-import { easeInOutCubic } from '../engine/utils';
+import { gameService } from '../../state/stateMachine';
+import GameBoard from '../containers/GameBoard';
+import { easeInOutCubic } from '../../engine/utils';
 
-import config from './config.json';
+import config from '../config.json';
 
 import Loader from './Loader';
-import Lives from './components/Lives';
-import Score from './components/Score';
-import Timer from './components/Timer';
-import Highscores from './containers/Highscores';
-import Credits from './containers/Credits';
-import Settings from './containers/Settings';
-import MainMenu from './containers/MainMenu';
+import Lives from '../components/Lives';
+import Score from '../components/Score';
+import Timer from '../components/Timer';
+import Highscores from '../containers/Highscores';
+import Credits from '../containers/Credits';
+import Settings from '../containers/Settings';
+import MainMenu from '../containers/MainMenu';
+import { animateOnTicker } from '../utils/animateOnTicker';
 
 export interface IOctisGame extends PIXI.Application {
     resources: object;
@@ -88,9 +89,9 @@ export default class Stage {
     private _unsubscribe: () => void;
 
     /**
-     * Active game-over animation frame
+     * Cancel active game-over animation
      */
-    private _gameOverRafId: number | null = null;
+    private _cancelGameOverAnim: (() => void) | null = null;
 
     /**
      * Constructor of the pixi application and its stage
@@ -104,6 +105,7 @@ export default class Stage {
             resolution: Math.min(window.devicePixelRatio || 1, 2),
             autoDensity: true,
             backgroundAlpha: 0,
+            sharedTicker: true,
         });
 
         this._resources = new Loader();
@@ -346,10 +348,8 @@ export default class Stage {
      * destroy everything after game and recreate for next session
      */
     private _resetHandler() {
-        if (this._gameOverRafId !== null) {
-            cancelAnimationFrame(this._gameOverRafId);
-            this._gameOverRafId = null;
-        }
+        this._cancelGameOverAnim?.();
+        this._cancelGameOverAnim = null;
 
         if (this._gameContainer) {
             this._gameContainer.destroy({ children: true });
@@ -363,31 +363,11 @@ export default class Stage {
      * Fade out the board and show highscores only
      */
     private _gameOverHandler() {
-        if (this._gameOverRafId !== null) {
-            cancelAnimationFrame(this._gameOverRafId);
-            this._gameOverRafId = null;
-        }
+        this._cancelGameOverAnim?.();
+        this._cancelGameOverAnim = null;
 
-        let start: number;
         const duration = 1200;
-        const showGameOver = (timestamp) => {
-            if (!this._gameContainer || !this._highscores) {
-                return;
-            }
-
-            if (!start) start = timestamp;
-            const cubicAnimatedValue = easeInOutCubic(Math.min(1, (timestamp - start) / duration));
-
-            this._gameContainer.alpha = 1 - cubicAnimatedValue;
-            this._highscores.alpha = cubicAnimatedValue;
-
-            if (cubicAnimatedValue >= 1) {
-                this._gameContainer.visible = false;
-                this._gameOverRafId = null;
-                return;
-            }
-            this._gameOverRafId = requestAnimationFrame(showGameOver);
-        };
+        let elapsed = 0;
 
         this._highscores.alpha = 0;
         this._highscores.visible = true;
@@ -395,7 +375,25 @@ export default class Stage {
         if (this._credits) this._credits.visible = false;
         if (this._settings) this._settings.visible = false;
 
-        this._gameOverRafId = requestAnimationFrame(showGameOver);
+        this._cancelGameOverAnim = animateOnTicker((deltaMS) => {
+            if (!this._gameContainer || !this._highscores) {
+                this._cancelGameOverAnim = null;
+                return true;
+            }
+
+            elapsed += deltaMS;
+            const cubicAnimatedValue = easeInOutCubic(Math.min(1, elapsed / duration));
+
+            this._gameContainer.alpha = 1 - cubicAnimatedValue;
+            this._highscores.alpha = cubicAnimatedValue;
+
+            if (cubicAnimatedValue >= 1) {
+                this._gameContainer.visible = false;
+                this._cancelGameOverAnim = null;
+                return true;
+            }
+            return false;
+        });
     }
 
     set resources(resources) {

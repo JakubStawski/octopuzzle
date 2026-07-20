@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js';
 import { gameService } from '../../state/stateMachine';
 
 import config from '../config.json';
+import { animateOnTicker } from '../utils/animateOnTicker';
 
 /**
  * Timer components that shows the player how many time one has left
@@ -28,9 +29,9 @@ export default class Timer extends PIXI.Container {
     private _unsubscribe: () => void;
 
     /**
-     * Active progress animation frame
+     * Cancel active progress animation
      */
-    private _rafId: number | null = null;
+    private _cancelAnim: (() => void) | null = null;
 
     /**
      * Progress snapshot used when pausing on blur
@@ -110,10 +111,8 @@ export default class Timer extends PIXI.Container {
     }
 
     private _cancelProgressAnimation() {
-        if (this._rafId !== null) {
-            cancelAnimationFrame(this._rafId);
-            this._rafId = null;
-        }
+        this._cancelAnim?.();
+        this._cancelAnim = null;
     }
 
     private _startProgressAnimation(durationMs: number, fromFullWidth = true) {
@@ -128,28 +127,25 @@ export default class Timer extends PIXI.Container {
         const startWidth = this._timerProgressBar.width;
         const fullWidth = this._timerContainer.width;
         const remainingRatio = startWidth / fullWidth;
-        const duration = (durationMs / 100) * remainingRatio;
-        let start: number;
+        const totalDuration = durationMs * remainingRatio;
+        let elapsed = 0;
 
-        const decreaseTime = (timestamp: number) => {
+        this._cancelAnim = animateOnTicker((deltaMS) => {
             if (this.destroyed) {
-                return;
+                this._cancelAnim = null;
+                return true;
             }
 
-            if (!start) {
-                start = timestamp;
-            }
-
-            this._timerProgressBar.width = startWidth * (1 - (timestamp - start) / (duration * 100));
+            elapsed += deltaMS;
+            this._timerProgressBar.width = startWidth * (1 - elapsed / totalDuration);
 
             if (this._timerProgressBar.width <= 0) {
-                this._rafId = null;
-                return;
+                this._timerProgressBar.width = 0;
+                this._cancelAnim = null;
+                return true;
             }
-            this._rafId = requestAnimationFrame(decreaseTime);
-        };
-
-        this._rafId = requestAnimationFrame(decreaseTime);
+            return false;
+        });
         this._pausedProgressRatio = null;
     }
 

@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { gameService } from '../../state/stateMachine';
 import config from '../config.json';
+import { animateOnTicker } from '../utils/animateOnTicker';
 
 /**
  * Component that displays players lives
@@ -17,9 +18,9 @@ export default class Lives extends PIXI.Container {
     private _unsubscribe: () => void;
 
     /**
-     * Active fade animation frame
+     * Cancel active fade animation
      */
-    private _rafId: number | null = null;
+    private _cancelAnim: (() => void) | null = null;
 
     /**
      * Last known lives count for detecting loss
@@ -62,10 +63,8 @@ export default class Lives extends PIXI.Container {
     }
 
     private _cancelFade() {
-        if (this._rafId !== null) {
-            cancelAnimationFrame(this._rafId);
-            this._rafId = null;
-        }
+        this._cancelAnim?.();
+        this._cancelAnim = null;
     }
 
     private _fadeLifeIcon(index: number) {
@@ -76,23 +75,21 @@ export default class Lives extends PIXI.Container {
             return;
         }
 
-        const fadeOut = () => {
+        this._cancelAnim = animateOnTicker(() => {
             if (this.destroyed || !icon || icon.destroyed) {
-                this._rafId = null;
-                return;
+                this._cancelAnim = null;
+                return true;
             }
 
             icon.alpha -= 0.13;
 
             if (icon.alpha <= 0.2) {
                 icon.alpha = 0.2;
-                this._rafId = null;
-                return;
+                this._cancelAnim = null;
+                return true;
             }
-            this._rafId = requestAnimationFrame(fadeOut);
-        };
-
-        this._rafId = requestAnimationFrame(fadeOut);
+            return false;
+        });
     }
 
     /**

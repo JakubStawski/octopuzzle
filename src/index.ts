@@ -1,5 +1,5 @@
 import { gameService } from './state/stateMachine';
-import Stage from './pixi/Stage';
+import Stage from './pixi/core/Stage';
 import { setKeyBindings, addVisibilityChangeListener } from './engine/utils';
 import SoundMediator from './engine/SoundMediator';
 
