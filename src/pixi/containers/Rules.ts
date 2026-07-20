@@ -1,17 +1,18 @@
 import * as PIXI from 'pixi.js';
 
 import Button from '../components/Button';
+import Scroll from '../components/Scroll';
 import { gameService } from '../../state/stateMachine';
 
 /**
- * Rules screen — same panel background as credits / highscores
+ * Rules screen — gameplay guide + scoring (scrollable)
  */
 export default class Rules extends PIXI.Container {
     private _background: PIXI.Sprite;
 
     private _title: PIXI.Text;
 
-    private _body: PIXI.Text;
+    private _scroll: Scroll;
 
     private _mainMenuButton: PIXI.Container;
 
@@ -24,7 +25,7 @@ export default class Rules extends PIXI.Container {
     private _init() {
         this._createBackground();
         this._createTitle();
-        this._createBody();
+        this._createScrollBody();
         this._createMainMenuButton();
         this.visible = false;
     }
@@ -51,38 +52,89 @@ export default class Rules extends PIXI.Container {
         this.addChild(this._title);
     }
 
-    private _createBody() {
-        const textStyle = new PIXI.TextStyle({
+    private _createScrollBody() {
+        const content = new PIXI.Container();
+        const wrapWidth = this._background.width - 220;
+
+        const sectionStyle = new PIXI.TextStyle({
             fontFamily: 'Playground',
             lineJoin: 'round',
-            fontSize: 38,
+            fontSize: 44,
+            fill: 0xffffff,
+            stroke: 0x000000,
+            strokeThickness: 7,
+            align: 'left',
+            wordWrap: true,
+            wordWrapWidth: wrapWidth,
+        });
+
+        const bodyStyle = new PIXI.TextStyle({
+            fontFamily: 'Playground',
+            lineJoin: 'round',
+            fontSize: 36,
             fill: 0xecda81,
             strokeThickness: 3,
             stroke: 0x987800,
             align: 'left',
-            lineHeight: 50,
+            lineHeight: 46,
             wordWrap: true,
-            wordWrapWidth: this._background.width - 160,
+            wordWrapWidth: wrapWidth,
         });
 
-        const rulesText = [
-            'A piece appears in the center.',
-            'Use arrow keys to place it on a side board.',
-            '',
-            'Each board builds one octopus from 4 parts.',
-            'You cannot place a part that is already there.',
-            '',
-            'Complete an octopus to score points.',
-            'More matching colors = higher score!',
-            '',
-            'Wrong move or timeout costs a life.',
-            'The timer gets faster as you progress.',
-        ].join('\n');
+        let y = 0;
+        const addGap = (amount = 16) => {
+            y += amount;
+        };
+        const addText = (textContent: string, style: PIXI.TextStyle) => {
+            const text = new PIXI.Text(textContent, style);
+            text.anchor.set(0.5, 0);
+            text.y = y;
+            content.addChild(text);
+            y += text.height + 10;
+        };
 
-        this._body = new PIXI.Text(rulesText, textStyle);
-        this._body.anchor.set(0.5, 0.5);
-        this._body.y = 10;
-        this.addChild(this._body);
+        addText('How to play', sectionStyle);
+        addText(
+            [
+                'A piece appears in the center.',
+                'Use arrow keys to place it on a side board.',
+                '',
+                'Each board builds one octopus from 4 parts.',
+                'You cannot place a part that is already there.',
+                '',
+                'Wrong move or timeout costs a life.',
+                'The timer gets faster as you progress.',
+            ].join('\n'),
+            bodyStyle,
+        );
+        addGap(18);
+        addText('Scoring', sectionStyle);
+        addText(
+            'Complete an octopus to score points. Points depend on how many parts share the most common color:',
+            bodyStyle,
+        );
+        addGap(8);
+        addText(
+            [
+                '4 matching colors  —  300 pts',
+                '3 matching colors  —  100 pts',
+                '2 matching colors  —  40 pts',
+                '1 matching color     —  10 pts',
+            ].join('\n'),
+            bodyStyle,
+        );
+
+        const viewportHeight = this._background.height - 360;
+        const viewportWidth = this._background.width - 200;
+
+        this._scroll = new Scroll(content, {
+            width: viewportWidth,
+            height: viewportHeight,
+            trackGap: 8,
+            trackWidth: 40,
+        });
+        this._scroll.y = -20;
+        this.addChild(this._scroll);
     }
 
     private _createMainMenuButton() {

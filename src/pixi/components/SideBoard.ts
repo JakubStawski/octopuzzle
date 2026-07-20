@@ -3,6 +3,7 @@ import { BoardSingleSide } from '../../state/types';
 import BoardSquare from './BoardSquare';
 import Piece from './Piece';
 import { gameService } from '../../state/stateMachine';
+import { getCompletionPoints } from '../../engine/game';
 import config from '../config.json';
 import { animateOnTicker, playPopIn } from '../utils/animateOnTicker';
 
@@ -212,6 +213,49 @@ export default class SideBoard extends PIXI.Container {
         this._animationCancels = [];
     }
 
+    private _playPointsPopup(points: number) {
+        const textStyle = new PIXI.TextStyle({
+            fontFamily: 'Playground',
+            lineJoin: 'round',
+            fontSize: 56,
+            fill: 0xffffff,
+            stroke: 0x000000,
+            strokeThickness: 8,
+            align: 'center',
+        });
+
+        const label = new PIXI.Text(`+${points}`, textStyle);
+        label.anchor.set(0.5, 0.5);
+        label.scale.set(0.35);
+        label.alpha = 1;
+        this._boardSquare.addChild(label);
+
+        const duration = 900;
+        const startY = 0;
+        let elapsed = 0;
+
+        const cancel = animateOnTicker((deltaMS) => {
+            if (this.destroyed || label.destroyed) {
+                return true;
+            }
+
+            elapsed += deltaMS;
+            const t = Math.min(1, elapsed / duration);
+            const eased = 1 - (1 - t) ** 2;
+
+            label.scale.set(0.35 + eased * 1.4);
+            label.y = startY - eased * 80;
+            label.alpha = 1 - t;
+
+            if (t >= 1) {
+                label.destroy();
+                return true;
+            }
+            return false;
+        });
+        this._animationCancels.push(cancel);
+    }
+
     /**
      * Animate completed octi
      */
@@ -226,10 +270,18 @@ export default class SideBoard extends PIXI.Container {
             piece.scale.set(1);
         });
 
+        const boardSide =
+            gameService.getSnapshot().context.board[this._side] || this._currentMatrix;
+        const points = getCompletionPoints(boardSide);
+
         for (let i = 0; i < this._piecesContainer.children.length; i += 1) {
             const child = this._piecesContainer.children[i];
 
             const timeoutId = setTimeout(() => {
+                if (i === 0) {
+                    this._playPointsPopup(points);
+                }
+
                 const cancel = animateOnTicker(() => {
                     if (this.destroyed || !child || child.destroyed || !this._piecesContainer?.children[i]) {
                         return true;

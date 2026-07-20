@@ -1,7 +1,23 @@
 import { IHighscoresBoard } from 'src/pixi/types';
 import { gameService } from '../state/stateMachine';
-import { GameContext } from '../state/types';
+import { BoardSingleSide, GameContext } from '../state/types';
 import { findMostFrequentItem, randomizePieceColor, randomizeUniquePiecePart, Timer } from './utils';
+
+const COMPLETION_SCORING: Record<number, number> = {
+    1: 10,
+    2: 40,
+    3: 100,
+    4: 300,
+};
+
+/**
+ * Points for a completed octopus based on matching color count
+ */
+export const getCompletionPoints = (side: BoardSingleSide): number => {
+    const colors = Object.keys(side).map((part) => side[part].color);
+    const { count } = findMostFrequentItem(colors);
+    return COMPLETION_SCORING[count] || 0;
+};
 
 /**
  * Function that randomizes a piece with given context
@@ -83,24 +99,16 @@ export const resetTimeAcceleration = (context: GameContext) => {
  * @param event event object
  */
 export const calculatePointsAfterCompletion = (context: GameContext) => {
-    let array = [];
     let sideToClear = '';
+    let points = 0;
     Object.keys(context.board).forEach((element) => {
         if (Object.keys(context.board[element]).length === 4) {
             sideToClear = element;
-            array = Object.keys(context.board[element]).map((item) => context.board[element][item].color);
+            points = getCompletionPoints(context.board[element]);
         }
     });
 
-    const { count } = findMostFrequentItem(array);
-    const scoring = {
-        1: 10,
-        2: 40,
-        3: 100,
-        4: 300,
-    };
-
-    addScore(context, scoring[count]);
+    addScore(context, points);
 
     clearCompletedBoard(sideToClear, context);
     gameService.send({ type: 'CONTINUE' });
