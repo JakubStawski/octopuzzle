@@ -17,10 +17,6 @@ import Settings from '../containers/Settings';
 import MainMenu from '../containers/MainMenu';
 import { animateOnTicker, loopOnTicker } from '../utils/animateOnTicker';
 
-export interface IOctisGame extends PIXI.Application {
-    resources: object;
-}
-
 export default class Stage {
     private static readonly DESIGN_SIZE = 1800;
 
@@ -126,7 +122,8 @@ export default class Stage {
 
         globalThis.__PIXI_APP__ = this._app;
         if (!existingCanvas) {
-            document.querySelector('body').appendChild(this._app.view as HTMLCanvasElement);
+            const root = document.querySelector('#app') || document.body;
+            root.appendChild(this._app.view as HTMLCanvasElement);
         }
 
         this._app.stage.scale.set(1, 1);

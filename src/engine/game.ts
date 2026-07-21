@@ -1,6 +1,6 @@
-import { IHighscoresBoard } from 'src/pixi/types';
+import { IHighscoresBoard } from '../pixi/types';
 import { gameService } from '../state/stateMachine';
-import { BoardSingleSide, GameContext } from '../state/types';
+import { BoardSingleSide, GameContext, GameEvent } from '../state/types';
 import { findMostFrequentItem, randomizePieceColor, randomizeUniquePiecePart, Timer } from './utils';
 
 const COMPLETION_SCORING: Record<number, number> = {
@@ -41,7 +41,11 @@ export const randomizePiece = (context: GameContext) => {
  * @param event event object
  * @returns
  */
-export const checkChoice = (context: GameContext, event: { value: string }) => {
+export const checkChoice = (context: GameContext, event: GameEvent) => {
+    if (event.type !== 'CHOICE') {
+        return;
+    }
+
     if (context.board[event.value][context.piece.part] !== undefined) {
         gameService.send({ type: 'WRONG_CHOICE' });
 
@@ -52,7 +56,7 @@ export const checkChoice = (context: GameContext, event: { value: string }) => {
 };
 
 /**
- * Funtion that checks if the choice that was made by player completes the octi
+ * Function that checks if the choice that was made by player completes the octi
  * If so, 'COMPLETED' event is sent, and 'CONTINUE' event is sent otherwise
  *
  * @param context state of the game
@@ -119,7 +123,11 @@ export const calculatePointsAfterCompletion = (context: GameContext) => {
  * @param context state of the game
  * @param event event object
  */
-export const assignPieceToBoard = (context: GameContext, event: { value: string }) => {
+export const assignPieceToBoard = (context: GameContext, event: GameEvent) => {
+    if (event.type !== 'RIGHT_CHOICE') {
+        return;
+    }
+
     context.board[event.value][context.piece.part] = { color: context.piece.color };
 };
 
@@ -172,13 +180,33 @@ export const setInitialState = (context: GameContext) => {
 };
 
 /**
+ * Safely read high scores from localStorage
+ */
+export const loadHighScoreBoard = (): IHighscoresBoard[] => {
+    try {
+        const parsed = JSON.parse(localStorage.getItem('highScoreBoard') || '[]');
+        if (!Array.isArray(parsed)) {
+            return [];
+        }
+
+        return parsed.filter(
+            (entry): entry is IHighscoresBoard =>
+                !!entry &&
+                typeof entry === 'object' &&
+                typeof entry.score === 'number' &&
+                typeof entry.date === 'string',
+        );
+    } catch {
+        return [];
+    }
+};
+
+/**
  * Adding score to the highscores
  * @param context state of the game
  */
 export const addScoreToHighScores = (context: GameContext) => {
-    const currentHighscores = localStorage.getItem('highScoreBoard') || '[]';
-
-    const highScoreBoard: IHighscoresBoard[] = JSON.parse(currentHighscores);
+    const highScoreBoard = loadHighScoreBoard();
     const entryId = Date.now();
     highScoreBoard.push({
         date: new Date().toLocaleString('pl-PL'),
@@ -186,21 +214,10 @@ export const addScoreToHighScores = (context: GameContext) => {
         id: entryId,
     });
 
-    const compareFn = (a: IHighscoresBoard, b: IHighscoresBoard) => {
-        if (a.score > b.score) {
-            return -1;
-        }
-
-        if (a.score < b.score) {
-            return 1;
-        }
-
-        return 0;
-    };
-    highScoreBoard.sort(compareFn);
+    highScoreBoard.sort((a, b) => b.score - a.score);
 
     if (highScoreBoard.length > 10) {
-        highScoreBoard.pop();
+        highScoreBoard.length = 10;
     }
 
     localStorage.setItem('highScoreBoard', JSON.stringify(highScoreBoard));

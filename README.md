@@ -6,7 +6,7 @@ Made with **PixiJS**, **XState**, and **Vite**.
 
 ## How to play
 
-A random octopus piece appears in the center. Place it on one of the four side boards (top / bottom / left / right) using the arrow keys.
+A random octopus piece appears in the center. Place it on one of the four side boards (top / bottom / left / right) using the arrow keys, WASD, or swipe.
 
 - Each side board holds one octopus made of four parts: top-left, top-right, bottom-left, bottom-right.
 - You can only place a part if that board does not already have that quadrant.
@@ -18,12 +18,13 @@ In-game, open **Rules** from the main menu for the same overview.
 
 ### Controls
 
-| Key | Action |
+| Input | Action |
 | --- | --- |
-| ↑ | Place on top board |
-| ↓ | Place on bottom board |
-| ← | Place on left board |
-| → | Place on right board |
+| ↑ / W | Place on top board |
+| ↓ / S | Place on bottom board |
+| ← / A | Place on left board |
+| → / D | Place on right board |
+| Swipe | Same directions on touch devices |
 
 Music can be toggled in **Settings**. High scores are stored in the browser (`localStorage`).
 

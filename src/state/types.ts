@@ -1,13 +1,5 @@
 import { Timer } from '../engine/utils';
 
-export interface ToggleContext {
-    count: number;
-}
-
-export type ToggleEvent = {
-    type: 'TOGGLE';
-};
-
 export interface BoardSingleSide {
     lt?: {
         color: number;
@@ -53,30 +45,9 @@ export interface GameContext {
     countdownValue: number;
 }
 
-export interface GameState {
-    value: string;
-    context: GameContext;
-    states: {
-        main_screen: object;
-        countdown: object;
-        idle: object;
-        check_choice: object;
-        announce: object;
-        win: object;
-        lose: object;
-        add_score: object;
-        high_scores: object;
-        credits: object;
-        rules: object;
-        settings: object;
-        game_over: object;
-    };
-}
-
 export type GameEvent =
     | { type: 'START' }
     | { type: 'TIMEOUT'; value?: string }
-    | { type: 'EXIT'; score?: number }
     | { type: 'CONTINUE' }
     | { type: 'CHOICE'; value: string }
     | { type: 'WRONG_CHOICE' }

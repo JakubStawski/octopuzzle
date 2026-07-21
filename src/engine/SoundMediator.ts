@@ -28,6 +28,21 @@ export default class SoundMediator {
     private _lose: Howl;
 
     /**
+     * Countdown tick (3, 2, 1)
+     */
+    private _countdownTick: Howl;
+
+    /**
+     * Countdown "Go!" sound
+     */
+    private _countdownGo: Howl;
+
+    /**
+     * Last countdown value that already played a sound
+     */
+    private _lastCountdownValue: number | null = null;
+
+    /**
      * Unsubscribe from game service
      */
     private _unsubscribe: () => void;
@@ -70,6 +85,16 @@ export default class SoundMediator {
         this._lose = new Howl({
             src: ['./sfx/marimba-ringtone-15-201165.mp3'],
             volume: 0.5,
+        });
+
+        this._countdownTick = new Howl({
+            src: ['./sfx/universfield-bubble-pop-06-351337.mp3'],
+            volume: 0.8,
+        });
+
+        this._countdownGo = new Howl({
+            src: ['./sfx/u_xio2tir4to-bubble-pop-389501.mp3'],
+            volume: 0.9,
         });
 
         this._setVolume(gameService.initialState.context.settings.musicEnabled);
@@ -121,6 +146,20 @@ export default class SoundMediator {
 
             if (state.event.type === 'COMPLETED') {
                 this._win.play();
+            }
+
+            if (state.matches('countdown')) {
+                const value = state.context.countdownValue;
+                if (value !== this._lastCountdownValue) {
+                    this._lastCountdownValue = value;
+                    if (value > 0) {
+                        this._countdownTick.play();
+                    } else {
+                        this._countdownGo.play();
+                    }
+                }
+            } else {
+                this._lastCountdownValue = null;
             }
 
             if (state.event.type === 'MUTE') {

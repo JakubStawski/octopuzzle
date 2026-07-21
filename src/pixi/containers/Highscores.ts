@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { gameService } from '../../state/stateMachine';
+import { loadHighScoreBoard } from '../../engine/game';
 import { IHighscoresBoard } from '../types';
 import config from '../config.json';
 import Button from '../components/Button';
@@ -191,7 +192,7 @@ export default class Highscores extends PIXI.Container {
     }
 
     private _createHighscores() {
-        this._highscoresBoard = JSON.parse(localStorage.getItem('highScoreBoard') || '[]');
+        this._highscoresBoard = loadHighScoreBoard();
 
         if (!this._highscoresBoard.length) return;
 

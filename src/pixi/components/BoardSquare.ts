@@ -1,5 +1,4 @@
 import * as PIXI from 'pixi.js';
-import display from '@pixi/display';
 import config from '../config.json';
 
 /**
@@ -10,16 +9,6 @@ export default class BoardSquare extends PIXI.Container {
      * Background of the component
      */
     private _background: string;
-
-    /**
-     * width of the rectangle
-     */
-    private _w: number;
-
-    /**
-     * height of the rectangle
-     */
-    private _h: number;
 
     /**
      * Rectangle

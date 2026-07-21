@@ -1,12 +1,17 @@
 import { assign, createMachine, interpret } from 'xstate';
 import * as gameEngine from '../engine/game';
-import { GameContext, GameState, GameEvent } from './types';
+import { GameContext, GameEvent } from './types';
+
+type GameTypestate = {
+    value: string;
+    context: GameContext;
+};
 
 /**
  * Game state machine
  * Can be visually shown on xstate visualizer
  */
-export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
+export const gameMachine = createMachine<GameContext, GameEvent, GameTypestate>({
     initial: 'main_screen',
     id: 'game',
     context: {
@@ -118,6 +123,8 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameState>({
                 gameEngine.unblockUserControls,
             ],
             on: {
+                // SideBoard listens for CLEAR; keep it as an acknowledged event
+                CLEAR: {},
                 CONTINUE: {
                     target: 'idle',
                 },

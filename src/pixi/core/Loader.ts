@@ -32,29 +32,18 @@ export default class Loader {
             frame: './images/webp/frame3.webp',
             star: './images/webp/star.webp',
             timer: './images/webp/timer.webp',
-            logo: './images/webp/logo_small.webp',
-            sadOcti: './images/webp/sad-octi.webp',
             highscores: './images/webp/highscores-bg.webp',
-            'bronze-medal': './images/webp/bronze-medal.webp',
-            'silver-medal': './images/webp/silver-medal.webp',
-            'gold-medal': './images/webp/gold-medal.webp',
             'button-long': './images/webp/button-long.webp',
             switch: './images/switch.png',
             scroll: './images/scroll-track.png',
             'rainbow-octi': './images/rainbowOcti-2.png',
         });
 
-        PIXI.Assets.load({
-            src: `./fonts/Playground.ttf`,
+        Promise.all([
+            PIXI.Assets.load({ src: './fonts/Playground.ttf' }),
+            PIXI.Assets.loadBundle('octis'),
+        ]).then(() => {
+            dispatchEvent(new CustomEvent('assetsLoaded'));
         });
-
-        PIXI.Assets.loadBundle('octis', this._handleOnProgress.bind(this)).then(() => {
-            const assetsLoadedDomEvent = new CustomEvent('assetsLoaded');
-            return dispatchEvent(assetsLoadedDomEvent);
-        });
-    }
-
-    private _handleOnProgress(progress) {
-        console.log('Loading progress:', progress);
     }
 }

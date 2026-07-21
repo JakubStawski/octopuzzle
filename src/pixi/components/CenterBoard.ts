@@ -23,16 +23,6 @@ export default class CenterBoard extends PIXI.Container {
     private _currentPiece;
 
     /**
-     * width
-     */
-    private _w: number;
-
-    /**
-     * height
-     */
-    private _h: number;
-
-    /**
      * The position of the rt piece
      */
     private _rtPosition: number[];
@@ -63,13 +53,9 @@ export default class CenterBoard extends PIXI.Container {
 
     /**
      * Constructor of a center board component
-     * @param width number
-     * @param height  number
      */
-    constructor(width, height) {
+    constructor() {
         super();
-        this._w = width;
-        this._h = height;
 
         this._init();
         this.addChild(this._boardSquare);

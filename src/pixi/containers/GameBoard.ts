@@ -31,16 +31,6 @@ export default class GameBoard extends PIXI.Container {
     private _centerBoard: PIXI.Container;
 
     /**
-     * Width
-     */
-    private _w: number;
-
-    /**
-     * Height
-     */
-    private _h: number;
-
-    /**
      * Constructor of the pixi application and its stage
      */
     constructor() {
@@ -103,10 +93,7 @@ export default class GameBoard extends PIXI.Container {
      * Creates center board
      */
     private _createCenterBoard() {
-        this._centerBoard = new CenterBoard(
-            this._w / 3 - 2 * config.config.gameBoardGap,
-            this._h / 3 - 2 * config.config.gameBoardGap,
-        );
+        this._centerBoard = new CenterBoard();
 
         this.addChild(this._centerBoard);
     }

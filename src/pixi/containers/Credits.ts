@@ -121,6 +121,8 @@ export default class Credits extends PIXI.Container {
                 '"Film Special Effects Marimba Bloop 2" - Pixabay',
                 '"Marimba Ringtone" sound effects - Pixabay',
                 '"Musical Ukewave" - Pixabay',
+                '"Bubble Pop 06" (countdown 3-2-1) - Universfield / Pixabay',
+                '"bubble pop" (countdown Go) - u_xio2tir4to / Pixabay',
                 'Additional sound effects from FreeSound Community via Pixabay',
             ].join('\n'),
             bodyStyle,
@@ -135,6 +137,8 @@ export default class Credits extends PIXI.Container {
                 'https://pixabay.com/sound-effects/film-special-effects-marimba-bloop-2-188149/',
                 'https://pixabay.com/pl/sound-effects/search/marimba%20ringtone/',
                 'https://pixabay.com/sound-effects/musical-ukewave-74471/',
+                'https://pixabay.com/sound-effects/film-special-effects-bubble-pop-06-351337/',
+                'https://pixabay.com/sound-effects/bubble-pop-389501/',
             ].join('\n'),
             linkStyle,
         );

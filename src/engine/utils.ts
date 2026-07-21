@@ -1,11 +1,12 @@
 /* eslint-disable no-plusplus */
 
 import { gameService } from '../state/stateMachine';
+import { GameContext } from '../state/types';
 
 /**
  * Create string that contains 2 letters that represents which corner
  * of the piece is being given
- * @returns 2 letters string in which first one is the Y axis and second one is Y axis
+ * @returns 2 letters string: first is X axis (l/r), second is Y axis (t/b)
  */
 export const randomizePiecePart = () => {
     let result = '';
@@ -24,32 +25,31 @@ export const randomizePiecePart = () => {
 export const easeInOutCubic = (x: number): number => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2);
 
 /**
- * Randomizes piece part which user is able to put in fiven context
+ * Randomizes piece part which user is able to put in given context
  * @param context state of the game
  * @returns unique piece part
  */
-export const randomizeUniquePiecePart = (context) => {
-    let isUnique = false;
+export const randomizeUniquePiecePart = (context: GameContext) => {
     let part = randomizePiecePart();
 
-    while (!isUnique) {
+    // Keep rolling until at least one side board can accept this part
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
         let includesCounter = 0;
-        Object.keys(context.board).forEach((item) => {
-            if (Object.keys(context.board[item]).includes(part)) {
+        const sides = Object.keys(context.board) as Array<keyof typeof context.board>;
+
+        for (let i = 0; i < sides.length; i++) {
+            if (Object.keys(context.board[sides[i]]).includes(part)) {
                 includesCounter += 1;
             }
-        });
-
-        if (includesCounter === 4) {
-            part = randomizePiecePart();
-            includesCounter = 0;
-        } else {
-            isUnique = true;
-            includesCounter = 0;
         }
-    }
 
-    return part;
+        if (includesCounter !== 4) {
+            return part;
+        }
+
+        part = randomizePiecePart();
+    }
 };
 
 /**
@@ -79,7 +79,7 @@ export const randomizePieceColor = () => Math.floor(Math.random() * 4);
  * @param array the array of colors on finished piece on board
  * @returns object containing color and color count of most frequent color on finished piece
  */
-export const findMostFrequentItem = (array) => {
+export const findMostFrequentItem = (array: number[]) => {
     const hash = new Map();
     for (let i = 0; i < array.length; i++) {
         if (hash.has(array[i])) {
@@ -245,11 +245,10 @@ export class Timer {
 
     public getTimeLeft() {
         if (this._running) {
-            this.stop();
-            this.start();
+            return Math.max(0, this._remaining - (Date.now() - this._started));
         }
 
-        return this._remaining;
+        return Math.max(0, this._remaining);
     }
 
     public getStateRunning() {
