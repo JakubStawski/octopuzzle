@@ -4,6 +4,7 @@ import BoardSquare from './BoardSquare';
 import Piece from './Piece';
 import { gameService } from '../../state/stateMachine';
 import { getCompletionPoints } from '../../engine/game';
+import { playScorePopupSound } from '../../engine/SoundMediator';
 import config from '../config.json';
 import { animateOnTicker, playPopIn } from '../utils/animateOnTicker';
 
@@ -214,6 +215,8 @@ export default class SideBoard extends PIXI.Container {
     }
 
     private _playPointsPopup(points: number) {
+        playScorePopupSound();
+
         const textStyle = new PIXI.TextStyle({
             fontFamily: 'Playground',
             lineJoin: 'round',

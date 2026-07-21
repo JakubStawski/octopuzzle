@@ -1,6 +1,13 @@
 import { Howl, Howler } from 'howler';
 import { gameService } from '../state/stateMachine';
 
+let soundMediatorInstance: SoundMediator | null = null;
+
+/** Play floating +points popup SFX */
+export const playScorePopupSound = () => {
+    soundMediatorInstance?.playScorePopup();
+};
+
 export default class SoundMediator {
     /**
      * Click sound howl
@@ -18,9 +25,9 @@ export default class SoundMediator {
     private _ocean: Howl;
 
     /**
-     * Win marimba sound
+     * Score popup sound (+points)
      */
-    private _win: Howl;
+    private _scorePopup: Howl;
 
     /**
      * Lose marimba sound
@@ -52,7 +59,17 @@ export default class SoundMediator {
      */
     private _ambienceStarted = false;
 
+    /**
+     * Timeout used to restore music after lose SFX
+     */
+    private _musicDuckRestoreId: ReturnType<typeof setTimeout> | null = null;
+
+    private static readonly MUSIC_VOLUME = 0.1;
+
+    private static readonly MUSIC_DUCK_VOLUME = 0;
+
     constructor() {
+        soundMediatorInstance = this;
         this._init();
         this._subscribeEvents();
         this._unlockAmbienceOnFirstGesture();
@@ -66,7 +83,7 @@ export default class SoundMediator {
         this._music = new Howl({
             src: ['./sfx/ukewave-74471.mp3'],
             loop: true,
-            volume: 0.1,
+            volume: SoundMediator.MUSIC_VOLUME,
             onload: () => this._startAmbience(),
         });
 
@@ -77,9 +94,9 @@ export default class SoundMediator {
             onload: () => this._startAmbience(),
         });
 
-        this._win = new Howl({
-            src: ['./sfx/marimba-bloop-2-188149.mp3'],
-            volume: 0.7,
+        this._scorePopup = new Howl({
+            src: ['./sfx/u_o8xh7gwsrj-correct_answer_toy_bi-bling-476370.mp3'],
+            volume: 0.85,
         });
 
         this._lose = new Howl({
@@ -134,6 +151,13 @@ export default class SoundMediator {
         window.addEventListener('keydown', unlock);
     }
 
+    /**
+     * Score popup SFX (+points floating label)
+     */
+    playScorePopup() {
+        this._scorePopup.play();
+    }
+
     private _subscribeEvents() {
         const subscription = gameService.subscribe((state) => {
             if (state.event.type === 'CHOICE' && state.matches('check_choice')) {
@@ -141,11 +165,7 @@ export default class SoundMediator {
             }
 
             if (state.event.type === 'WRONG_CHOICE' || state.event.type === 'TIMEOUT') {
-                this._lose.play();
-            }
-
-            if (state.event.type === 'COMPLETED') {
-                this._win.play();
+                this._playLose();
             }
 
             if (state.matches('countdown')) {
@@ -172,5 +192,42 @@ export default class SoundMediator {
             }
         });
         this._unsubscribe = () => subscription.unsubscribe();
+    }
+
+    /**
+     * Play lose SFX while briefly ducking background music
+     */
+    private _playLose() {
+        this._duckBackgroundMusic();
+        this._lose.stop();
+        const soundId = this._lose.play();
+
+        const restore = () => {
+            this._lose.off('end', restore, soundId);
+            this._restoreBackgroundMusic();
+        };
+
+        this._lose.once('end', restore, soundId);
+
+        const durationMs = Math.max(500, (this._lose.duration(soundId) || 1.5) * 1000);
+        this._clearMusicDuckRestore();
+        this._musicDuckRestoreId = setTimeout(restore, durationMs + 80);
+    }
+
+    private _duckBackgroundMusic() {
+        this._clearMusicDuckRestore();
+        this._music.fade(this._music.volume(), SoundMediator.MUSIC_DUCK_VOLUME, 120);
+    }
+
+    private _restoreBackgroundMusic() {
+        this._clearMusicDuckRestore();
+        this._music.fade(this._music.volume(), SoundMediator.MUSIC_VOLUME, 450);
+    }
+
+    private _clearMusicDuckRestore() {
+        if (this._musicDuckRestoreId !== null) {
+            clearTimeout(this._musicDuckRestoreId);
+            this._musicDuckRestoreId = null;
+        }
     }
 }
