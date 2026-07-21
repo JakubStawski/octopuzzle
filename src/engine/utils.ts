@@ -7,14 +7,14 @@ const PIECE_PARTS = ['lt', 'lb', 'rt', 'rb'] as const;
 const PIECE_COLORS = [0, 1, 2, 3] as const;
 
 /** Prefer parts with 2–3 open destinations over forced (1) or wide-open (4) */
-const OPEN_SLOT_WEIGHT_PREFERRED = 4;
+const OPEN_SLOT_WEIGHT_PREFERRED = 3;
 const OPEN_SLOT_WEIGHT_OTHER = 1;
 
 /** Extra weight per board that is 3/4 and missing this part */
-const NEAR_COMPLETE_PART_BOOST = 3;
+const NEAR_COMPLETE_PART_BOOST = 2;
 
 /** Chance to bias color toward a dominant color on boards that can take this part */
-const COLOR_DOMINANCE_BIAS = 0.4;
+const COLOR_DOMINANCE_BIAS = 0.3;
 
 type WeightedOption<T> = { value: T; weight: number };
 

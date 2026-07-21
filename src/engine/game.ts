@@ -16,8 +16,8 @@ export const BASE_DECISION_TIME_MS = 5000;
 /** Multiply remaining time by this on each clear after grace */
 const TIME_ACCEL_FACTOR = 0.9;
 
-/** Floor so long runs stay playable (~2.0 s) */
-const MIN_TIME_ACCELERATION = 2.0 / (BASE_DECISION_TIME_MS / 1000);
+/** Floor so long runs stay playable (~1.5 s) */
+const MIN_TIME_ACCELERATION = 1.5 / (BASE_DECISION_TIME_MS / 1000);
 
 /** First N clears do not tighten the timer */
 const GRACE_CLEARS = 3;
