@@ -42,8 +42,15 @@ export default class Loader {
         Promise.all([
             PIXI.Assets.load({ src: './fonts/Playground.ttf' }),
             PIXI.Assets.loadBundle('octis'),
-        ]).then(() => {
-            dispatchEvent(new CustomEvent('assetsLoaded'));
-        });
+        ])
+            .then(async () => {
+                try {
+                    await document.fonts.load('16px Playground');
+                    await document.fonts.ready;
+                } catch {
+                    // Font metrics may differ slightly if browser blocks FontFace API
+                }
+                dispatchEvent(new CustomEvent('assetsLoaded'));
+            });
     }
 }

@@ -303,7 +303,7 @@ export default class Stage {
         this._livesBoard = new Lives();
 
         this._livesBoard.x = config.config.frameWidth / 2 + config.config.healthIconWidth;
-        this._livesBoard.y = -config.config.frameHeight * 1.5 + this._livesBoard.height;
+        this._livesBoard.y = -config.config.frameHeight * 1.5 + config.config.healthIconHeight;
 
         this._gameContainer.addChild(this._livesBoard);
     }
@@ -317,8 +317,8 @@ export default class Stage {
         this._scoreBoard.x = config.config.frameWidth / 2 + config.config.healthIconWidth;
         this._scoreBoard.y =
             -config.config.frameHeight * 1.5 +
-            this._scoreBoard.height +
-            this._livesBoard.height +
+            config.config.healthIconHeight +
+            config.config.scoreIconHeight +
             config.config.playerStatusGap;
 
         this._gameContainer.addChild(this._scoreBoard);

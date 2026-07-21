@@ -57,11 +57,9 @@ export default class Highscores extends PIXI.Container {
     private _init() {
         this._createHighscoresBackground();
         this._createTitle();
-        this._createHighcoresContainer();
-
-        this._subscribeEvents();
         this._createTableHeader();
-
+        this._createHighcoresContainer();
+        this._subscribeEvents();
         this._createMainMenuButton();
         this._addButtons();
     }
@@ -86,14 +84,14 @@ export default class Highscores extends PIXI.Container {
         this._mainMenuButton = new Button(() => {
             gameService.send({ type: 'MAIN_MENU' });
         }, 'Main Menu');
-        this._mainMenuButton.x = this.width / 2 - this._mainMenuButton.width - 80;
-        this._mainMenuButton.y = this.height / 2 - this._mainMenuButton.height - 80;
+        this._mainMenuButton.x = this._background.width / 2 - this._mainMenuButton.width - 80;
+        this._mainMenuButton.y = this._background.height / 2 - this._mainMenuButton.height - 68;
     }
 
     private _createTableHeader() {
         this._highscoresHeader = new PIXI.Container();
-        this._highscoresHeader.x = -this.width / 2 + 80;
-        this._highscoresHeader.y = -this.height / 2 + 120;
+        this._highscoresHeader.x = -this._background.width / 2 + 80;
+        this._highscoresHeader.y = -this._background.height / 2 + 120;
 
         const textStyle = new PIXI.TextStyle({
             fontFamily: 'Playground',
@@ -108,15 +106,16 @@ export default class Highscores extends PIXI.Container {
         position.x = 0;
 
         const score = new PIXI.Text('Score', textStyle);
-        score.x = 275;
+        score.x = config.config.highscoresMedalWidth + 200;
 
         const date = new PIXI.Text('Date', textStyle);
-        date.x = 575;
+        date.x = config.config.highscoresMedalWidth + 500;
 
+        const separatorY = Math.max(position.height, score.height, date.height) + 12;
         const separator = new PIXI.Graphics();
         separator
             .beginFill(0xecda81)
-            .drawRect(0, 70, this.width - 160, 3)
+            .drawRect(0, separatorY, this._background.width - 160, 3)
             .endFill();
 
         this._highscoresHeader.addChild(position, score, date, separator);
@@ -136,6 +135,8 @@ export default class Highscores extends PIXI.Container {
         });
 
         const position = new PIXI.Text(`${index + 1}.`, textStyle);
+        position.anchor.set(0, 0.5);
+        position.y = config.config.highscoresRecordHeight / 2;
         position.x = 0;
         recordContainer.addChild(position);
 
@@ -185,8 +186,8 @@ export default class Highscores extends PIXI.Container {
     private _createHighcoresContainer() {
         this._highscoresContainer = new PIXI.Container();
 
-        this._highscoresContainer.x = -this.width / 2 + 80;
-        this._highscoresContainer.y = -this.height / 2 + 220;
+        this._highscoresContainer.x = -this._background.width / 2 + 80;
+        this._highscoresContainer.y = this._highscoresHeader.y + this._highscoresHeader.height + 16;
 
         this.addChild(this._highscoresContainer);
     }

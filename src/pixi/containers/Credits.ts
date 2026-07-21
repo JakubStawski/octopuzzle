@@ -171,8 +171,8 @@ export default class Credits extends PIXI.Container {
         this._mainMenuButton = new Button(() => {
             gameService.send({ type: 'MAIN_MENU' });
         }, 'Main Menu');
-        this._mainMenuButton.x = this.width / 2 - this._mainMenuButton.width - 80;
-        this._mainMenuButton.y = this.height / 2 - this._mainMenuButton.height - 80;
+        this._mainMenuButton.x = this._background.width / 2 - this._mainMenuButton.width - 80;
+        this._mainMenuButton.y = this._background.height / 2 - this._mainMenuButton.height - 68;
         this.addChild(this._mainMenuButton);
     }
 }
