@@ -5,9 +5,9 @@ import { findMostFrequentItem, randomizePieceColor, randomizeUniquePiecePart, Ti
 
 const COMPLETION_SCORING: Record<number, number> = {
     1: 10,
-    2: 40,
+    2: 50,
     3: 100,
-    4: 300,
+    4: 200,
 };
 
 /** Base decision window before acceleration (ms) */
@@ -40,10 +40,12 @@ export const getCompletionPoints = (side: BoardSingleSide): number => {
  * @param context state of the game
  */
 export const randomizePiece = (context: GameContext) => {
+    const part = randomizeUniquePiecePart(context);
+
     context.piece = {
         remainingTime: BASE_DECISION_TIME_MS * context.player.timeAcceleration,
-        part: randomizeUniquePiecePart(context),
-        color: randomizePieceColor(),
+        part,
+        color: randomizePieceColor(context, part),
     };
 };
 
@@ -192,7 +194,7 @@ export const setInitialState = (context: GameContext) => {
     };
     context.player = {
         score: 0,
-        lives: 4,
+        lives: 3,
         timeoutID: null,
         timeAcceleration: 1,
         clearsCompleted: 0,

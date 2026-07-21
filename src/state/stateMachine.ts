@@ -28,7 +28,7 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameTypestate>(
         },
         player: {
             score: 0,
-            lives: 4,
+            lives: 3,
             timeoutID: null,
             timeAcceleration: 1,
             clearsCompleted: 0,

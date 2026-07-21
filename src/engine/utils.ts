@@ -3,6 +3,38 @@
 import { gameService } from '../state/stateMachine';
 import { GameContext } from '../state/types';
 
+const PIECE_PARTS = ['lt', 'lb', 'rt', 'rb'] as const;
+const PIECE_COLORS = [0, 1, 2, 3] as const;
+
+/** Prefer parts with 2–3 open destinations over forced (1) or wide-open (4) */
+const OPEN_SLOT_WEIGHT_PREFERRED = 4;
+const OPEN_SLOT_WEIGHT_OTHER = 1;
+
+/** Extra weight per board that is 3/4 and missing this part */
+const NEAR_COMPLETE_PART_BOOST = 3;
+
+/** Chance to bias color toward a dominant color on boards that can take this part */
+const COLOR_DOMINANCE_BIAS = 0.4;
+
+type WeightedOption<T> = { value: T; weight: number };
+
+/**
+ * Pick a value from weighted options (weights must be > 0)
+ */
+const pickWeighted = <T>(options: WeightedOption<T>[]): T => {
+    const total = options.reduce((sum, option) => sum + option.weight, 0);
+    let roll = Math.random() * total;
+
+    for (let i = 0; i < options.length; i++) {
+        roll -= options[i].weight;
+        if (roll <= 0) {
+            return options[i].value;
+        }
+    }
+
+    return options[options.length - 1].value;
+};
+
 /**
  * Create string that contains 2 letters that represents which corner
  * of the piece is being given
@@ -25,31 +57,51 @@ export const randomizePiecePart = () => {
 export const easeInOutCubic = (x: number): number => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2);
 
 /**
- * Randomizes piece part which user is able to put in given context
+ * Randomizes piece part with preference for interesting choices (2–3 open slots)
+ * and a boost for missing quarters on near-complete boards.
  * @param context state of the game
  * @returns unique piece part
  */
 export const randomizeUniquePiecePart = (context: GameContext) => {
-    let part = randomizePiecePart();
+    const sides = Object.keys(context.board) as Array<keyof typeof context.board>;
+    const candidates: WeightedOption<string>[] = [];
 
-    // Keep rolling until at least one side board can accept this part
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-        let includesCounter = 0;
-        const sides = Object.keys(context.board) as Array<keyof typeof context.board>;
+    for (let p = 0; p < PIECE_PARTS.length; p++) {
+        const part = PIECE_PARTS[p];
+        let openSlots = 0;
+        let nearCompleteBoosts = 0;
 
         for (let i = 0; i < sides.length; i++) {
-            if (Object.keys(context.board[sides[i]]).includes(part)) {
-                includesCounter += 1;
+            const boardSide = context.board[sides[i]];
+            const occupied = Object.keys(boardSide);
+
+            if (occupied.includes(part)) {
+                continue;
+            }
+
+            openSlots += 1;
+            if (occupied.length === 3) {
+                nearCompleteBoosts += 1;
             }
         }
 
-        if (includesCounter !== 4) {
-            return part;
+        if (openSlots === 0) {
+            continue;
         }
 
-        part = randomizePiecePart();
+        const preferredSlots = openSlots === 2 || openSlots === 3;
+        const weight =
+            (preferredSlots ? OPEN_SLOT_WEIGHT_PREFERRED : OPEN_SLOT_WEIGHT_OTHER) +
+            nearCompleteBoosts * NEAR_COMPLETE_PART_BOOST;
+
+        candidates.push({ value: part, weight });
     }
+
+    if (candidates.length === 0) {
+        return randomizePiecePart();
+    }
+
+    return pickWeighted(candidates);
 };
 
 /**
@@ -68,10 +120,39 @@ export const addVisibilityChangeListener = () => {
 };
 
 /**
- * Generates a number which represents color of the octi
+ * Generates a color with a light bias toward colors that already dominate
+ * on boards where the given part can still be placed.
+ * @param context state of the game
+ * @param part piece corner that was already chosen
  * @returns number between 0 - 3
  */
-export const randomizePieceColor = () => Math.floor(Math.random() * 4);
+export const randomizePieceColor = (context: GameContext, part: string) => {
+    const sides = Object.keys(context.board) as Array<keyof typeof context.board>;
+    const dominantColors: number[] = [];
+
+    for (let i = 0; i < sides.length; i++) {
+        const boardSide = context.board[sides[i]];
+        if (boardSide[part] !== undefined) {
+            continue;
+        }
+
+        const colors = Object.keys(boardSide).map((key) => boardSide[key].color);
+        if (colors.length === 0) {
+            continue;
+        }
+
+        const { color } = findMostFrequentItem(colors);
+        if (color >= 0) {
+            dominantColors.push(color);
+        }
+    }
+
+    if (dominantColors.length > 0 && Math.random() < COLOR_DOMINANCE_BIAS) {
+        return dominantColors[Math.floor(Math.random() * dominantColors.length)];
+    }
+
+    return PIECE_COLORS[Math.floor(Math.random() * PIECE_COLORS.length)];
+};
 
 /**
  * This is a helper function that finds the count of most frequent color on finished piece

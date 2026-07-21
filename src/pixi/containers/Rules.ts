@@ -119,9 +119,9 @@ export default class Rules extends PIXI.Container {
         addGap(8);
         addText(
             [
-                '4 matching colors  -  300 pts',
+                '4 matching colors  -  200 pts',
                 '3 matching colors  -  100 pts',
-                '2 matching colors  -  40 pts',
+                '2 matching colors  -  50 pts',
                 '1 matching color     -  10 pts',
             ].join('\n'),
             bodyStyle,
