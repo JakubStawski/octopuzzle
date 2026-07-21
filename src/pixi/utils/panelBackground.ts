@@ -12,24 +12,25 @@ export type PanelSize = {
  * On mobile the landscape asset is rotated 90° so it reads as portrait.
  */
 export function setupPanelBackground(sprite: PIXI.Sprite): PanelSize {
-    sprite.anchor.set(0.5, 0.5);
+    const panel = sprite;
+    panel.anchor.set(0.5, 0.5);
 
-    const baseW = sprite.texture.width;
-    const baseH = sprite.texture.height;
+    const baseW = panel.texture.width;
+    const baseH = panel.texture.height;
 
     if (!isMobileLayout()) {
-        sprite.rotation = 0;
-        sprite.scale.set(1);
+        panel.rotation = 0;
+        panel.scale.set(1);
         return { width: baseW, height: baseH };
     }
 
     // Landscape → portrait
-    sprite.rotation = Math.PI / 2;
+    panel.rotation = Math.PI / 2;
 
     const visualWidth = baseH;
     const targetWidth = getDesignSize().width * 0.9;
     const scale = targetWidth / visualWidth;
-    sprite.scale.set(scale);
+    panel.scale.set(scale);
 
     return {
         width: baseH * scale,

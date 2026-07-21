@@ -10,6 +10,21 @@ const COMPLETION_SCORING: Record<number, number> = {
     4: 300,
 };
 
+/** Base decision window before acceleration (ms) */
+export const BASE_DECISION_TIME_MS = 5000;
+
+/** Multiply remaining time by this on each clear after grace */
+const TIME_ACCEL_FACTOR = 0.9;
+
+/** Floor so long runs stay playable (~2.0 s) */
+const MIN_TIME_ACCELERATION = 2.0 / (BASE_DECISION_TIME_MS / 1000);
+
+/** First N clears do not tighten the timer */
+const GRACE_CLEARS = 3;
+
+/** Soft recovery toward 1.0 after losing a life */
+const LIFE_LOSS_ACCEL_RECOVERY = 0.15;
+
 /**
  * Points for a completed octopus based on matching color count
  */
@@ -26,7 +41,7 @@ export const getCompletionPoints = (side: BoardSingleSide): number => {
  */
 export const randomizePiece = (context: GameContext) => {
     context.piece = {
-        remainingTime: 5000 * context.player.timeAcceleration,
+        remainingTime: BASE_DECISION_TIME_MS * context.player.timeAcceleration,
         part: randomizeUniquePiecePart(context),
         color: randomizePieceColor(),
     };
@@ -77,22 +92,32 @@ export const checkCompletion = (context: GameContext) => {
 
 /**
  * Once the piece is completed tighten up
- * the time player have to make decission
+ * the time player have to make a decision.
+ * Grace clears keep full pressure off early game; floor prevents ~1s timers.
  * @param context state of the game
  */
 export const accelerateTime = (context: GameContext) => {
-    if (context.player.timeAcceleration * 0.8 <= 0.2) {
+    context.player.clearsCompleted += 1;
+
+    if (context.player.clearsCompleted <= GRACE_CLEARS) {
         return;
     }
-    context.player.timeAcceleration *= 0.8;
+
+    const next = context.player.timeAcceleration * TIME_ACCEL_FACTOR;
+    if (next < MIN_TIME_ACCELERATION) {
+        context.player.timeAcceleration = MIN_TIME_ACCELERATION;
+        return;
+    }
+
+    context.player.timeAcceleration = next;
 };
 
 /**
- * Reset the amount of time player have to make decission to default
+ * Soften timer pressure after a life loss without wiping the skill curve
  * @param context state of the game
  */
-export const resetTimeAcceleration = (context: GameContext) => {
-    context.player.timeAcceleration = 1;
+export const softenTimeAcceleration = (context: GameContext) => {
+    context.player.timeAcceleration = Math.min(1, context.player.timeAcceleration + LIFE_LOSS_ACCEL_RECOVERY);
 };
 
 /**
@@ -170,6 +195,7 @@ export const setInitialState = (context: GameContext) => {
         lives: 4,
         timeoutID: null,
         timeAcceleration: 1,
+        clearsCompleted: 0,
     };
     context.settings = {
         controlsEnabled: true,

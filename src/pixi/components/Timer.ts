@@ -24,6 +24,11 @@ export default class Timer extends PIXI.Container {
     private _timerSprite: PIXI.Sprite;
 
     /**
+     * Shows current time-acceleration as a speed multiplier
+     */
+    private _accelText: PIXI.Text;
+
+    /**
      * Unsubscribe from game service
      */
     private _unsubscribe: () => void;
@@ -54,9 +59,11 @@ export default class Timer extends PIXI.Container {
         this._createTimerSprite();
         this._createTimerContainer();
         this._createProgressbar();
+        this._createAccelText();
 
         this.addChild(this._timerContainer);
         this.addChild(this._timerSprite);
+        this.addChild(this._accelText);
 
         this._onTimeChange();
     }
@@ -110,6 +117,37 @@ export default class Timer extends PIXI.Container {
         this._timerContainer.addChild(this._timerProgressBar);
     }
 
+    /**
+     * Label for current acceleration (how much faster than base)
+     */
+    private _createAccelText() {
+        const textStyle = new PIXI.TextStyle({
+            fontFamily: 'Playground',
+            lineJoin: 'round',
+            fontSize: 28,
+            fill: '0xffffff',
+        });
+
+        this._accelText = new PIXI.Text('×1.0', textStyle);
+        this._accelText.anchor.set(0.5, 0);
+        this._accelText.x = this._timerSprite.x;
+        this._accelText.y = this._timerSprite.y + this._timerSprite.height / 2 + 8;
+        this._accelText.visible = false;
+    }
+
+    /**
+     * Format internal multiplier (1 → slower window shrinks) as a speed factor for the player
+     */
+    private _formatAccelLabel(timeAcceleration: number): string {
+        const speed = 1 / Math.max(timeAcceleration, 0.001);
+        return `×${speed.toFixed(1)}`;
+    }
+
+    private _updateAccelText(timeAcceleration: number, visible: boolean) {
+        this._accelText.text = this._formatAccelLabel(timeAcceleration);
+        this._accelText.visible = visible;
+    }
+
     private _cancelProgressAnimation() {
         this._cancelAnim?.();
         this._cancelAnim = null;
@@ -156,6 +194,19 @@ export default class Timer extends PIXI.Container {
     private _onTimeChange() {
         const subscription = gameService.subscribe((state) => {
             this._handleAnnouncement(state);
+
+            const inPlay =
+                state.context.player.lives > 0 &&
+                !state.matches('announce') &&
+                !state.matches('countdown') &&
+                !state.matches('main_screen') &&
+                !state.matches('game_over') &&
+                !state.matches('high_scores') &&
+                !state.matches('settings') &&
+                !state.matches('rules') &&
+                !state.matches('credits');
+
+            this._updateAccelText(state.context.player.timeAcceleration, inPlay);
 
             if (state.event.type === 'BLUR') {
                 if (this._timerContainer.width > 0) {

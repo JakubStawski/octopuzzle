@@ -31,6 +31,7 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameTypestate>(
             lives: 4,
             timeoutID: null,
             timeAcceleration: 1,
+            clearsCompleted: 0,
         },
         settings: {
             controlsEnabled: true,
@@ -151,7 +152,7 @@ export const gameMachine = createMachine<GameContext, GameEvent, GameTypestate>(
             },
         },
         lose: {
-            entry: [gameEngine.resetTimeAcceleration, gameEngine.loseHp],
+            entry: [gameEngine.softenTimeAcceleration, gameEngine.loseHp],
             on: {
                 CONTINUE: {
                     target: 'idle',

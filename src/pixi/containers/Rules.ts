@@ -104,7 +104,9 @@ export default class Rules extends PIXI.Container {
                 'You cannot place a part that is already there.',
                 '',
                 'Wrong move or timeout costs a life.',
-                'The timer gets faster as you progress.',
+                'After a few clears the timer speeds up',
+                '(shown next to the bar as ×1.0, ×1.1, …).',
+                'Losing a life eases the pace a bit.',
             ].join('\n'),
             bodyStyle,
         );

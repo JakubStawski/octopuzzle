@@ -36,6 +36,7 @@ export interface GameContext {
         lives: number;
         timeoutID: Timer | null;
         timeAcceleration: number;
+        clearsCompleted: number;
     };
     settings: {
         controlsEnabled: boolean;
