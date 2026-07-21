@@ -170,14 +170,14 @@ export default class Timer extends PIXI.Container {
                 return;
             }
 
+            // After countdown, XState keeps the delayed event (`xstate.after(...)`), not `done.*`.
+            // Start the bar whenever we freshly enter idle (CONTINUE, countdown→idle, etc.).
             if (state.matches('idle') && state.context.player.timeoutID) {
-                const fromCountdown =
-                    typeof state.event.type === 'string' && state.event.type.startsWith('done.');
-                if (
-                    state.event.type === 'START' ||
-                    state.event.type === 'CONTINUE' ||
-                    fromCountdown
-                ) {
+                const justEnteredIdle =
+                    Boolean(state.changed) &&
+                    state.history != null &&
+                    !state.history.matches('idle');
+                if (justEnteredIdle) {
                     this._startProgressAnimation(state.context.player.timeoutID.getTimeLeft(), true);
                 }
             }
