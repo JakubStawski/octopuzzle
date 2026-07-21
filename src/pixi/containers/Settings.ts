@@ -5,7 +5,7 @@ import Switch from '../components/Switch';
 import { gameService } from '../../state/stateMachine';
 
 /**
- * Settings screen — sound toggle on highscores-style panel
+ * Settings screen - sound toggle on highscores-style panel
  */
 export default class Settings extends PIXI.Container {
     private _background: PIXI.Sprite;

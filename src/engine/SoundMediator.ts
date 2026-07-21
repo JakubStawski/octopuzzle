@@ -94,7 +94,7 @@ export default class SoundMediator {
     }
 
     /**
-     * Browsers often block autoplay until a user gesture — retry then.
+     * Browsers often block autoplay until a user gesture - retry then.
      */
     private _unlockAmbienceOnFirstGesture() {
         const unlock = () => {

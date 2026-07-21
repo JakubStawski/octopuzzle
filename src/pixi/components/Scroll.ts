@@ -83,7 +83,7 @@ export default class Scroll extends PIXI.Container {
 
         const texture = PIXI.Assets.cache.get('scroll') as PIXI.Texture;
 
-        // Asset is a horizontal capsule — rotate to vertical track
+        // Asset is a horizontal capsule - rotate to vertical track
         this._track = new PIXI.Sprite(texture);
         this._track.anchor.set(0.5, 0.5);
         this._track.rotation = Math.PI / 2;

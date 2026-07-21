@@ -5,7 +5,7 @@ import Scroll from '../components/Scroll';
 import { gameService } from '../../state/stateMachine';
 
 /**
- * Credits screen — asset attribution (scrollable)
+ * Credits screen - asset attribution (scrollable)
  */
 export default class Credits extends PIXI.Container {
     private _background: PIXI.Sprite;
@@ -116,11 +116,11 @@ export default class Credits extends PIXI.Container {
         );
         addText(
             [
-                '"Technology Click" – Pixabay',
-                '"Nature Gentle Ocean and Birdsong" – Pixabay',
-                '"Film Special Effects Marimba Bloop 2" – Pixabay',
-                '"Marimba Ringtone" sound effects – Pixabay',
-                '"Musical Ukewave" – Pixabay',
+                '"Technology Click" - Pixabay',
+                '"Nature Gentle Ocean and Birdsong" - Pixabay',
+                '"Film Special Effects Marimba Bloop 2" - Pixabay',
+                '"Marimba Ringtone" sound effects - Pixabay',
+                '"Musical Ukewave" - Pixabay',
                 'Additional sound effects from FreeSound Community via Pixabay',
             ].join('\n'),
             bodyStyle,
@@ -140,7 +140,7 @@ export default class Credits extends PIXI.Container {
         );
         addGap(18);
         addText('User Interface', sectionStyle);
-        addText('Island Game GUI – Craftpix', bodyStyle);
+        addText('Island Game GUI - Craftpix', bodyStyle);
         addText('Source:', bodyStyle);
         addText('https://craftpix.net/freebies/island-game-gui/', linkStyle);
         addGap(18);

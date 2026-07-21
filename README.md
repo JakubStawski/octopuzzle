@@ -10,7 +10,7 @@ A random octopus piece appears in the center. Place it on one of the four side b
 
 - Each side board holds one octopus made of four parts: top-left, top-right, bottom-left, bottom-right.
 - You can only place a part if that board does not already have that quadrant.
-- Completing an octopus scores points — matching colors score higher.
+- Completing an octopus scores points - matching colors score higher.
 - Wrong placement or running out of time costs a life.
 - After each completed octopus the timer gets a bit tighter.
 
@@ -29,9 +29,9 @@ Music can be toggled in **Settings**. High scores are stored in the browser (`lo
 
 ## Tech stack
 
-- [PixiJS](https://pixijs.com/) `7.2` — rendering & UI
-- [XState](https://xstate.js.org/) `4` — game state machine
-- [Howler](https://howlerjs.com/) — audio
+- [PixiJS](https://pixijs.com/) `7.2` - rendering & UI
+- [XState](https://xstate.js.org/) `4` - game state machine
+- [Howler](https://howlerjs.com/) - audio
 - [Vite](https://vitejs.dev/) + TypeScript
 
 ## Requirements

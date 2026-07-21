@@ -5,7 +5,7 @@ import Scroll from '../components/Scroll';
 import { gameService } from '../../state/stateMachine';
 
 /**
- * Rules screen — gameplay guide + scoring (scrollable)
+ * Rules screen - gameplay guide + scoring (scrollable)
  */
 export default class Rules extends PIXI.Container {
     private _background: PIXI.Sprite;
@@ -97,7 +97,8 @@ export default class Rules extends PIXI.Container {
         addText(
             [
                 'A piece appears in the center.',
-                'Use arrow keys to place it on a side board.',
+                'Place it on a side board with:',
+                'arrow keys, WASD, or a swipe on mobile.',
                 '',
                 'Each board builds one octopus from 4 parts.',
                 'You cannot place a part that is already there.',
@@ -116,10 +117,10 @@ export default class Rules extends PIXI.Container {
         addGap(8);
         addText(
             [
-                '4 matching colors  —  300 pts',
-                '3 matching colors  —  100 pts',
-                '2 matching colors  —  40 pts',
-                '1 matching color     —  10 pts',
+                '4 matching colors  -  300 pts',
+                '3 matching colors  -  100 pts',
+                '2 matching colors  -  40 pts',
+                '1 matching color     -  10 pts',
             ].join('\n'),
             bodyStyle,
         );

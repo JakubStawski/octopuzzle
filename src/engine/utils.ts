@@ -105,38 +105,93 @@ export const findMostFrequentItem = (array) => {
 };
 
 /**
- * Sets key bindings to play the game
- * @param gameService
+ * Sends a directional choice if controls are enabled and the game is idle
+ */
+const trySendChoice = (value: 'top' | 'bottom' | 'left' | 'right') => {
+    const snapshot = gameService.getSnapshot();
+    const { controlsEnabled } = snapshot.context.settings;
+
+    if (!controlsEnabled || !snapshot.matches('idle')) {
+        return;
+    }
+
+    gameService.send({ type: 'CHOICE', value });
+};
+
+/**
+ * Sets key bindings to play the game (arrow keys + WASD)
  */
 export const setKeyBindings = () => {
     document.addEventListener('keyup', (e) => {
-        const snapshot = gameService.getSnapshot();
-        const { controlsEnabled } = snapshot.context.settings;
+        const key = e.key.toLowerCase();
 
-        // Arrow choices only during active round
-        if (!controlsEnabled || !snapshot.matches('idle')) {
+        if (e.key === 'ArrowUp' || key === 'w') {
+            trySendChoice('top');
             return;
         }
 
-        if (e.key === 'ArrowUp') {
-            gameService.send({ type: 'CHOICE', value: 'top' });
+        if (e.key === 'ArrowDown' || key === 's') {
+            trySendChoice('bottom');
             return;
         }
 
-        if (e.key === 'ArrowDown') {
-            gameService.send({ type: 'CHOICE', value: 'bottom' });
+        if (e.key === 'ArrowLeft' || key === 'a') {
+            trySendChoice('left');
             return;
         }
 
-        if (e.key === 'ArrowLeft') {
-            gameService.send({ type: 'CHOICE', value: 'left' });
-            return;
-        }
-
-        if (e.key === 'ArrowRight') {
-            gameService.send({ type: 'CHOICE', value: 'right' });
+        if (e.key === 'ArrowRight' || key === 'd') {
+            trySendChoice('right');
         }
     });
+};
+
+/**
+ * Sets swipe bindings for touch devices
+ */
+export const setSwipeBindings = () => {
+    let startX = 0;
+    let startY = 0;
+
+    document.addEventListener(
+        'touchstart',
+        (e) => {
+            if (e.touches.length !== 1) {
+                return;
+            }
+
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        },
+        { passive: true },
+    );
+
+    document.addEventListener(
+        'touchend',
+        (e) => {
+            if (e.changedTouches.length !== 1) {
+                return;
+            }
+
+            const endX = e.changedTouches[0].clientX;
+            const endY = e.changedTouches[0].clientY;
+            const deltaX = endX - startX;
+            const deltaY = endY - startY;
+            const absX = Math.abs(deltaX);
+            const absY = Math.abs(deltaY);
+
+            if (Math.max(absX, absY) < 30) {
+                return;
+            }
+
+            if (absX > absY) {
+                trySendChoice(deltaX > 0 ? 'right' : 'left');
+            } else {
+                trySendChoice(deltaY > 0 ? 'bottom' : 'top');
+            }
+        },
+        { passive: true },
+    );
 };
 
 export class Timer {

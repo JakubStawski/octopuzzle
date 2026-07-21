@@ -263,7 +263,7 @@ export default class SideBoard extends PIXI.Container {
         this._cancelCompletionAnimation();
 
         // RIGHT_CHOICE may have just started a pop-in (alpha 0); COMPLETED cancels it
-        // before fade-in — snap every part fully visible so the last piece isn't missing
+        // before fade-in - snap every part fully visible so the last piece isn't missing
         this._piecesContainer.children.forEach((child) => {
             const piece = child as PIXI.DisplayObject & { scale: PIXI.ObservablePoint };
             piece.alpha = 1;

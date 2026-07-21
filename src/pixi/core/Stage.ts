@@ -114,16 +114,14 @@ export default class Stage {
         const existingCanvas = document.querySelector('canvas');
 
         this._app = new PIXI.Application({
-            width: Stage.DESIGN_SIZE,
-            height: Stage.DESIGN_SIZE,
+            width: 1800,
+            height: 1800,
             resolution: Math.min(window.devicePixelRatio || 1, 2),
             autoDensity: true,
             antialias: true,
             backgroundAlpha: 0,
             sharedTicker: true,
-            roundPixels: false,
         });
-        this._app.renderer.roundPixels = false;
         this._resources = new Loader();
 
         globalThis.__PIXI_APP__ = this._app;
@@ -341,7 +339,7 @@ export default class Stage {
     }
 
     /**
-     * Subscribe xstate events — screens driven by state.value
+     * Subscribe xstate events - screens driven by state.value
      */
     private _subscribeEvents() {
         const subscription = gameService.subscribe((state) => {

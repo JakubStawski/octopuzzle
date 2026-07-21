@@ -1,6 +1,6 @@
 import { gameService } from './state/stateMachine';
 import Stage from './pixi/core/Stage';
-import { setKeyBindings, addVisibilityChangeListener } from './engine/utils';
+import { setKeyBindings, setSwipeBindings, addVisibilityChangeListener } from './engine/utils';
 import SoundMediator from './engine/SoundMediator';
 
 const soundMediator = new SoundMediator();
@@ -17,6 +17,7 @@ const startGame = () => {
 
 // Setting the stage up
 startGame();
-// Setting arrow keys to control the game for player
+// Setting keyboard (arrows + WASD) and swipe controls for the player
 setKeyBindings();
+setSwipeBindings();
 addVisibilityChangeListener();
